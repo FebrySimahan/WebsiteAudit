@@ -1,0 +1,227 @@
+import api from "./api";
+
+export interface User {
+    id: number;
+    name: string;
+    email: string;
+    level_role: string;
+}
+
+export interface SuratTugas {
+    id_surat: number;
+    nomor_surat: string;
+    tanggal_surat: string;
+}
+
+export interface JadwalAudit {
+    id_jadwal: number;
+    id_permintaan: number;
+    tanggal_audit: string;
+    status_jadwal: string;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface PermintaanDataItem {
+    id_permintaan: number;
+    id_surat?: number;
+    judul_permintaan: string;
+    id_auditor: number;
+    id_auditee: number;
+    divisi: string;
+    deskripsi: string;
+    jenis_permintaan: string;
+    status_permintaan: string;
+    created_at?: string;
+    updated_at?: string;
+    auditor?: User;
+    auditee?: User;
+    surat?: SuratTugas;
+    jadwal_audits?: JadwalAudit[];
+}
+
+export interface PermintaanDataResponse {
+    success: boolean;
+    data: PermintaanDataItem | PermintaanDataItem[];
+    message?: string;
+}
+
+export interface PaginationInfo {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+}
+
+export interface PaginatedResponse {
+    success: boolean;
+    data: PermintaanDataItem[];
+    pagination: PaginationInfo;
+    message?: string;
+}
+
+const permintaanDataService = {
+
+    getAll: async (): Promise<PermintaanDataItem[]> => {
+        try {
+            const res = await api.get<PermintaanDataResponse>("/permintaan-data/direksi");
+            const data = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
+            console.log("Permintaan Data Response:", data);
+            console.log("First item:", data[0]);
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getAllPaginated: async (page: number = 1, perPage: number = 5): Promise<PaginatedResponse> => {
+        try {
+            const res = await api.get<PaginatedResponse>(`/permintaan-data/direksi?page=${page}&per_page=${perPage}`);
+            return {
+                success: res.data.success,
+                data: res.data.data,
+                pagination: res.data.pagination,
+            };
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getStatusAktif: async (): Promise<PermintaanDataItem[]> => {
+        try {
+            const res = await api.get<PermintaanDataResponse>("/permintaan-data/status-aktif");
+            const data = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
+            console.log("Permintaan Data Status Aktif Response:", data);
+            console.log("First item:", data[0]);
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getStatusBerjalan: async (): Promise<PermintaanDataItem[]> => {
+        try {
+            const res = await api.get<PermintaanDataResponse>("/permintaan-data/status-berjalan");
+            const data = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
+            console.log("Permintaan Data Status Berjalan Response:", data);
+            console.log("First item:", data[0]);
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getStatusSelesai: async (): Promise<PermintaanDataItem[]> => {
+        try {
+            const res = await api.get<PermintaanDataResponse>("/permintaan-data/status-selesai");
+            const data = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
+            console.log("Permintaan Data Status Selesai Response:", data);
+            console.log("First item:", data[0]);
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    searchByJudul: async (judul: string): Promise<PermintaanDataItem[]> => {
+        try {
+            const res = await api.get<PermintaanDataResponse>("/permintaan-data/search", {
+                params: { judul }
+            });
+            const data = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
+            console.log("Permintaan Data Search By Judul Response:", data);
+            console.log("First item:", data[0]);
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    // AUDITOR METHODS
+    getAllByAuditor: async (): Promise<PermintaanDataItem[]> => {
+        try {
+            const res = await api.get<PermintaanDataResponse>(`/permintaan-data/auditor?per_page=100`);
+            const data = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getAllByAuditorPaginated: async (page: number = 1, perPage: number = 5): Promise<PaginatedResponse> => {
+        try {
+            const res = await api.get<PaginatedResponse>(`/permintaan-data/auditor?page=${page}&per_page=${perPage}`);
+            return {
+                success: res.data.success,
+                data: res.data.data,
+                pagination: res.data.pagination,
+            };
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    searchByJudulAuditor: async (judul: string): Promise<PermintaanDataItem[]> => {
+        try {
+            const res = await api.get<PermintaanDataResponse>("/permintaan-data/auditor/search", {
+                params: { judul }
+            });
+            const data = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    filterByStatusAuditor: async (status: string, page: number = 1, perPage: number = 5): Promise<PaginatedResponse> => {
+        try {
+            const res = await api.get<PaginatedResponse>("/permintaan-data/auditor/filter-status", {
+                params: { status, page, per_page: perPage }
+            });
+            return {
+                success: res.data.success,
+                data: res.data.data,
+                pagination: res.data.pagination,
+            };
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    createPermintaanData: async (payload: {
+        id_surat: number;
+        id_auditee: number;
+        judul_permintaan: string;
+        deskripsi: string;
+        divisi: string;
+        jenis_permintaan: string;
+        jadwal_audit: string[];
+    }): Promise<PermintaanDataItem> => {
+        try {
+            const res = await api.post<PermintaanDataResponse>("/permintaan-data/auditor/create", payload);
+            return res.data.data as PermintaanDataItem;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getAuditees: async () => {
+        try {
+            const res = await api.get("/users/auditees");
+            return res.data.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getSuratTugasByAuditor: async () => {
+        try {
+            const res = await api.get("/surat-tugas/auditor/get-surat-tugas");
+            return res.data.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+};
+
+export default permintaanDataService;
