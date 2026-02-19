@@ -5,7 +5,11 @@ import {
     DialogTitle,
     DialogDescription,
 } from "@/components/ui/dialog";
-import type { TemuanItem } from "@/services/temuanService";
+import type { TemuanItem as TemuanItemBase } from "@/services/temuanService";
+
+type TemuanItem = TemuanItemBase & {
+    auditee?: { name?: string } | null;
+};
 
 interface ModalDetailTemuanProps {
     isOpen: boolean;
@@ -35,6 +39,10 @@ const ModalDetailTemuan = ({
                 </DialogHeader>
 
                 <div className="space-y-4">
+                    <div>
+                        <p className="text-sm font-semibold text-gray-700 mb-2">Nama Auditee:</p>
+                        <p className="text-sm text-gray-600">{temuan.auditee?.name || "-"}</p>
+                    </div>
                     <div>
                         <p className="text-sm font-semibold text-gray-700 mb-2">Judul Temuan:</p>
                         <p className="text-sm text-gray-600">{temuan.judul_temuan}</p>

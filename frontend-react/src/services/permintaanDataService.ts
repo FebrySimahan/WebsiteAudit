@@ -74,6 +74,18 @@ const permintaanDataService = {
         }
     },
 
+    getAllPermintaan: async (): Promise<PermintaanDataItem[]> => {
+        try {
+            const res = await api.get<PermintaanDataResponse>("/permintaan-data/auditor-temuan");
+            const data = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
+            console.log("Permintaan Data Response:", data);
+            console.log("First item:", data[0]);
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     getAllPaginated: async (page: number = 1, perPage: number = 5): Promise<PaginatedResponse> => {
         try {
             const res = await api.get<PaginatedResponse>(`/permintaan-data/direksi?page=${page}&per_page=${perPage}`);
@@ -137,16 +149,6 @@ const permintaanDataService = {
         }
     },
 
-    // AUDITOR METHODS
-    getAllByAuditor: async (): Promise<PermintaanDataItem[]> => {
-        try {
-            const res = await api.get<PermintaanDataResponse>(`/permintaan-data/auditor?per_page=100`);
-            const data = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
-            return data;
-        } catch (error) {
-            throw error;
-        }
-    },
 
     getAllByAuditorPaginated: async (page: number = 1, perPage: number = 5): Promise<PaginatedResponse> => {
         try {
@@ -208,15 +210,6 @@ const permintaanDataService = {
     getAuditees: async () => {
         try {
             const res = await api.get("/users/auditees");
-            return res.data.data;
-        } catch (error) {
-            throw error;
-        }
-    },
-
-    getSuratTugasByAuditor: async () => {
-        try {
-            const res = await api.get("/surat-tugas/auditor/get-surat-tugas");
             return res.data.data;
         } catch (error) {
             throw error;

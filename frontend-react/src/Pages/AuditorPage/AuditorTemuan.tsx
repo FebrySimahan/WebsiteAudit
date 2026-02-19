@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import AuditorLayout from "@/components/Layout/Auditor/AuditorLayout";
-import temuanService, { type Temuan, type TemuanPaginationInfo } from "@/services/temuanService";
+import temuanService, { type TemuanItem, type TemuanPaginationInfo } from "@/services/temuanService";
 import permintaanDataService from "@/services/permintaanDataService";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -20,7 +20,7 @@ import ModalCreateTemuan from "@/components/Modals/ModalCreateTemuan";
 import ModalVerifikasiTemuan from "@/components/Modals/ModalVerifikasiTemuan";
 
 const AuditorTemuan = () => {
-    const [temuan, setTemuan] = useState<Temuan[]>([]);
+    const [temuan, setTemuan] = useState<TemuanItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
@@ -31,14 +31,14 @@ const AuditorTemuan = () => {
 
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [selectedItem, setSelectedItem] = useState<Temuan | null>(null);
+    const [selectedItem, setSelectedItem] = useState<TemuanItem | null>(null);
     const [createLoading, setCreateLoading] = useState(false);
     const [auditees, setAuditees] = useState<any[]>([]);
     const [permintaanDataList, setPermintaanDataList] = useState<any[]>([]);
 
     // Verification states
     const [showVerifikasiModal, setShowVerifikasiModal] = useState(false);
-    const [selectedTemuanForVerifikasi, setSelectedTemuanForVerifikasi] = useState<Temuan | null>(null);
+    const [selectedTemuanForVerifikasi, setSelectedTemuanForVerifikasi] = useState<TemuanItem | null>(null);
     const [tindakLanjutData, setTindakLanjutData] = useState<any>(null);
     const [verifikasiReason, setVerifikasiReason] = useState("");
     const [verifikasiLoading, setVerifikasiLoading] = useState(false);
@@ -117,7 +117,7 @@ const AuditorTemuan = () => {
     const loadOptionsForModal = async () => {
         try {
             setError("");
-            const permintaanList = await permintaanDataService.getAllByAuditor();
+            const permintaanList = await permintaanDataService.getAll();
 
             setPermintaanDataList(permintaanList);
 
@@ -196,7 +196,7 @@ const AuditorTemuan = () => {
         setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
-    const handleVerifikasiClick = async (temuan: Temuan) => {
+    const handleVerifikasiClick = async (temuan: TemuanItem) => {
         try {
             setVerifikasiLoading(true);
             const tindakLanjut = await temuanService.getTindakLanjutByTemuan(temuan.id_temuan);

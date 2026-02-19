@@ -42,6 +42,17 @@ const SuratTugasPemeriksaanService = {
         }
     },
 
+
+    getAllForTemuanPage: async (): Promise<SuratTugasPemeriksaanItem[]> => {
+        try {
+            const res = await api.get<SuratTugasPemeriksaanResponse>("/surat-tugas/for-temuan-page");
+            const data = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     getAllPaginated: async (page: number = 1, perPage: number = 5): Promise<SuratTugasPaginatedResponse> => {
         try {
             const res = await api.get<SuratTugasPaginatedResponse>(`/surat-tugas/?page=${page}&per_page=${perPage}`);

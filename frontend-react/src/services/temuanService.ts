@@ -226,6 +226,17 @@ const temuanService = {
             throw error;
         }
     },
+
+    countByStatus: async (status: string = 'Terbuka'): Promise<number> => {
+        try {
+            const res = await api.get<{ success: boolean; count: number }>("/temuan/count-by-status", {
+                params: { status }
+            });
+            return res.data.count;
+        } catch (error) {
+            throw error;
+        }
+    },
 };
 
 export default temuanService;

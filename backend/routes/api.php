@@ -29,6 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/show-auditee-role', [TemuanController::class, 'showByAuditeeRole']);
         Route::post('/create-temuan', [TemuanController::class, 'createTemuan']);           
         Route::get('/{id}/pdf', [PdfController::class, 'generateTemuan']);
+        Route::get('/count-by-status', [TemuanController::class, 'countByStatus']);
     });
     
     Route::prefix('respon-temuans')->group(function () {
@@ -45,6 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('surat-tugas')->group(function () {
         Route::get('/', [SuratTugasController::class, 'index']);
+        Route::get('/for-temuan-page', [SuratTugasController::class, 'indexForTemuanPage']);
         Route::get('/search', [SuratTugasController::class, 'search']);
         Route::post('/create', [SuratTugasController::class, 'create']);
         Route::get('/auditor/get-surat-tugas', [SuratTugasController::class, 'getSuratTugasByAuditor']);
@@ -58,7 +60,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('permintaan-data')->group(function () {
         // punya auditor 
-        Route::get('/auditor', [PermintaanDataController::class, 'indexByAuditor']);
+        Route::get('/auditor', [PermintaanDataController::class, 'index']);
+        Route::get('/auditor-temuan', [PermintaanDataController::class, 'indexByAuditorTemuan']);
         Route::get('/auditor/search', [PermintaanDataController::class, 'searchByJudulAuditor']);
         Route::get('/auditor/filter-status', [PermintaanDataController::class, 'filterByStatusAuditor']);
         Route::get('/auditor/{id}/pdf-preview', [PdfController::class, 'previewPermintaanDataAuditor']);

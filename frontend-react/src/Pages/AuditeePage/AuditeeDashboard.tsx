@@ -3,6 +3,7 @@ import AuditeeLayout from "@/components/Layout/Auditee/AuditeeLayout";
 import scoreboardService from "@/services/scoreboardService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
+import temuanService from "@/services/temuanService";
 
 const AuditeeDashboard = () => {
   const navigate = useNavigate();
@@ -11,9 +12,11 @@ const AuditeeDashboard = () => {
   const [error, setError] = useState("");
   const [userRole, setUserRole] = useState<string>("");
   const [temuanData, setTemuanData] = useState<any[]>([]);
+  const [openCount, setOpenCount] = useState<number>(0);
 
   useEffect(() => {
     fetchUserDataAndScore();
+    fetchOpenCount();
   }, []);
 
   const fetchUserDataAndScore = async () => {
@@ -67,6 +70,15 @@ const AuditeeDashboard = () => {
     }
   };
 
+  const fetchOpenCount = async () => {
+    try {
+      const count = await temuanService.countByStatus("Terbuka");
+      setOpenCount(count);
+    } catch (err) {
+
+    }
+  };
+
   const getScoreColor = (poin: number) => {
     if (poin >= 95) return "text-green-600";
     if (poin >= 80) return "text-blue-600";
@@ -94,6 +106,15 @@ const AuditeeDashboard = () => {
         >
           Lihat Temuan
         </button>
+
+      ) : label === "Temuan Terbuka" ? (
+        <button
+          onClick={() => navigate("/auditee/temuan")}
+          className="bg-yellow-600 text-white px-4 py-2 rounded transition font-semibold text-sm sm:text-base w-full sm:w-auto whitespace-normal"
+        >
+          Lihat Temuan
+        </button>
+
       ) : null}
     </div>
   );
@@ -120,8 +141,16 @@ const AuditeeDashboard = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+              <div>
+                <StatCard
+                  label="Temuan Terbuka"
+                  value={openCount}
+                  borderColor="border-yellow-600"
+                  textColor="text-yellow-600"
+                />
+              </div>
+              <div >
                 <StatCard
                   label="Total Temuan"
                   value={temuanData.length}
@@ -129,7 +158,7 @@ const AuditeeDashboard = () => {
                   textColor="text-blue-600"
                 />
               </div>
-            </>
+            </div>
 
             <div className={`${getScoreBackground(currentPoin || 0)} rounded-lg p-6 shadow`}>
               <h2 className="text-lg font-semibold text-gray-800 mb-4">
@@ -141,14 +170,7 @@ const AuditeeDashboard = () => {
                 </span>
                 <span className="text-xl font-semibold text-gray-700 mb-2">/ 100</span>
               </div>
-              <p className="text-sm text-gray-600 mt-4">
-                {currentPoin !== null && (
-                  currentPoin >= 95 ? "Nilai Sempurna! 🎉" :
-                    currentPoin >= 80 ? "Pertahankan kinerja Anda" :
-                      currentPoin >= 60 ? "Tingkatkan kinerja" :
-                        "Perlu perbaikan signifikan"
-                )}
-              </p>
+
             </div>
 
 

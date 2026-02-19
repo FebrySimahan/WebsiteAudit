@@ -35,6 +35,25 @@ class PermintaanDataController extends Controller
             ], 500);
         }
     }
+
+    public function indexByAuditor(Request $request)
+    {
+        try {
+            
+
+            $permintaanDatas = PermintaanData::with('auditor', 'auditee', 'surat', 'jadwal_audits');
+
+            return response()->json([
+                'success' => true,
+                'data' => $permintaanDatas->items(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data permintaan: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
     public function searchByJudul(Request $request)
     {
         $judul = $request->input('judul');
@@ -113,33 +132,33 @@ class PermintaanDataController extends Controller
         }
     }
 
-    public function indexByAuditor(Request $request)
-    {
-        try {
-            $userId = auth()->id();
-            $perPage = $request->input('per_page', 5);
+    // public function indexByAuditor(Request $request)
+    // {
+    //     try {
+    //         $userId = auth()->id();
+    //         $perPage = $request->input('per_page', 5);
             
-            $permintaanDatas = PermintaanData::with(['auditor', 'auditee', 'surat', 'jadwal_audits'])
-                ->where('id_auditor', $userId)
-                ->paginate($perPage);
+    //         $permintaanDatas = PermintaanData::with(['auditor', 'auditee', 'surat', 'jadwal_audits'])
+    //             ->where('id_auditor', $userId)
+    //             ->paginate($perPage);
 
-            return response()->json([
-                'success' => true,
-                'data' => $permintaanDatas->items(),
-                'pagination' => [
-                    'current_page' => $permintaanDatas->currentPage(),
-                    'last_page' => $permintaanDatas->lastPage(),
-                    'per_page' => $permintaanDatas->perPage(),
-                    'total' => $permintaanDatas->total(),
-                ],
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data permintaan: ' . $e->getMessage(),
-            ], 500);
-        }
-    }    
+    //         return response()->json([
+    //             'success' => true,
+    //             'data' => $permintaanDatas->items(),
+    //             'pagination' => [
+    //                 'current_page' => $permintaanDatas->currentPage(),
+    //                 'last_page' => $permintaanDatas->lastPage(),
+    //                 'per_page' => $permintaanDatas->perPage(),
+    //                 'total' => $permintaanDatas->total(),
+    //             ],
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Gagal mengambil data permintaan: ' . $e->getMessage(),
+    //         ], 500);
+    //     }
+    // }    
     
     
     public function searchByJudulAuditor(Request $request)

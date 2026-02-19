@@ -43,6 +43,7 @@ class TemuanController extends Controller
         $page = $request->input('page', 1);
 
         $temuans = Temuan::with(['permintaanData', 'auditor', 'auditee', 'responTemuans'])
+            ->orderBy('tanggal_temuan', 'desc')
             ->paginate($perPage);
         
         return response()->json([
@@ -54,6 +55,16 @@ class TemuanController extends Controller
                 'per_page' => $temuans->perPage(),
                 'total' => $temuans->total(),
             ],
+        ]);
+    }
+
+    public function countByStatus(Request $request): JsonResponse
+    {
+        $status = $request->input('status', 'Terbuka');
+        $count = Temuan::where('status_temuan', $status)->count();
+        return response()->json([
+            'success' => true,
+            'count' => $count,
         ]);
     }
 
@@ -165,10 +176,12 @@ class TemuanController extends Controller
     public function showByAuditeeRole(Request $request): JsonResponse
     {
         $perPage = $request->input('per_page', 5);
-        
+        $levelRole = $request->user()->level_role;
         try {
             $temuans = Temuan::with(['permintaanData', 'auditor', 'auditee', 'responTemuans'])
-                ->where('id_auditee', $request->user()->id)
+                ->whereHas('auditee', function ($query) use ($levelRole) {
+                    $query->where('level_role', $levelRole);
+                })
                 ->paginate($perPage);
 
             return response()->json([

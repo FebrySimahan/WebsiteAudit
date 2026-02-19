@@ -29,6 +29,7 @@ import {
     PaginationPrevious,
     PaginationEllipsis,
 } from "@/components/ui/pagination";
+import SuratTugasPemeriksaanService from "@/services/suratTugasPemeriksaanService";
 
 const AuditorPermintaanData = () => {
     const [permintaanData, setPermintaanData] = useState<PermintaanDataItem[]>([]);
@@ -120,7 +121,7 @@ const AuditorPermintaanData = () => {
             setLoadingOptions(true);
             const [auditeesList, suratTugasList] = await Promise.all([
                 permintaanDataService.getAuditees(),
-                permintaanDataService.getSuratTugasByAuditor(),
+                SuratTugasPemeriksaanService.getAllForTemuanPage(),
             ]);
             setAuditees(auditeesList);
             setSuratTugas(suratTugasList);

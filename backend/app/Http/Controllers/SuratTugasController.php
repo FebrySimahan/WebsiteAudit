@@ -25,6 +25,20 @@ class SuratTugasController extends Controller
         ]);
     }
 
+    public function indexForTemuanPage(Request $request)
+    {
+        
+        $suratTugas = SuratTugasPemeriksaan::all();
+        
+        return response()->json([
+            'message' => 'Daftar surat tugas pemeriksaan',
+            'data' => $suratTugas,
+            'pagination' => [
+
+            ],
+        ]);
+    }
+
     public function search(Request $request)
     {
         $unitKerja = $request->query('unit_kerja', '');

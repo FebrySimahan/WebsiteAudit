@@ -244,7 +244,7 @@ const AuditorSuratTugas = () => {
                     </div>
                 )}
 
-                {/* Pagination */}
+                
                 {pagination && pagination.last_page > 1 && (
                     <div className="flex flex-col items-center gap-4 mt-6">
                         <Pagination>
