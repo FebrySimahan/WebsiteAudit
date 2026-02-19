@@ -37,13 +37,27 @@ class TindakLanjutController extends Controller
             ], 404);
         }
 
-        $tindakLanjut = TindakLanjut::create([
-            'id_respon' => $respon->id_respon,
-            'id_auditee' => $respon->id_auditee,
-            'deskripsi_tindak_lanjut' => $validated['deskripsi_tindak_lanjut'],
-            'tanggal_komitmen' => $validated['tanggal_komitmen'],
-            'status' => $validated['status'] ?? 'Proses',
-        ]);
+        // Cek apakah sudah ada tindak lanjut untuk respon ini
+        $tindakLanjut = TindakLanjut::where('id_respon', $respon->id_respon)->first();
+        if ($tindakLanjut) {
+            // Update data lama
+            $tindakLanjut->update([
+                'deskripsi_tindak_lanjut' => $validated['deskripsi_tindak_lanjut'],
+                'tanggal_komitmen' => $validated['tanggal_komitmen'],
+                'status' => $validated['status'] ?? 'Proses',
+            ]);
+            $message = 'Tindak lanjut berhasil diupdate';
+        } else {
+            // Buat baru jika belum ada
+            $tindakLanjut = TindakLanjut::create([
+                'id_respon' => $respon->id_respon,
+                'id_auditee' => $respon->id_auditee,
+                'deskripsi_tindak_lanjut' => $validated['deskripsi_tindak_lanjut'],
+                'tanggal_komitmen' => $validated['tanggal_komitmen'],
+                'status' => $validated['status'] ?? 'Proses',
+            ]);
+            $message = 'Tindak lanjut berhasil dibuat';
+        }
 
         Temuan::where('id_temuan', $validated['id_temuan'])
             ->update(['status_temuan' => 'Menunggu Verifikasi']);
@@ -51,7 +65,7 @@ class TindakLanjutController extends Controller
         return response()->json([
             'success' => true,
             'data' => $tindakLanjut,
-            'message' => 'Tindak lanjut berhasil dibuat',
+            'message' => $message,
         ], 201);
     }
 

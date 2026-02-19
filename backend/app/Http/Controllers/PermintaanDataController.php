@@ -36,6 +36,27 @@ class PermintaanDataController extends Controller
         }
     }
 
+        /**
+     * Update status permintaan data menjadi Selesai
+     */
+    public function setSelesai($id)
+    {
+        $permintaan = PermintaanData::find($id);
+        if (!$permintaan) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Permintaan data tidak ditemukan',
+            ], 404);
+        }
+        $permintaan->status_permintaan = 'Selesai';
+        $permintaan->save();
+        return response()->json([
+            'success' => true,
+            'message' => 'Status permintaan data berhasil diubah menjadi Selesai',
+            'data' => $permintaan
+        ]);
+    }
+
     public function indexByAuditor(Request $request)
     {
         try {

@@ -52,16 +52,16 @@ class ResponTemuanController extends Controller
             
                 // in case aja kalo misalnya data terakhir ditolak 
                 // (bakal diupdate jadi selesai) permintaan datanya auto selesai gitu
-                $temuan = Temuan::find($validated['id_temuan']);
-                if ($temuan && $temuan->id_permintaan) {
-                    $totalTemuan = Temuan::where('id_permintaan', $temuan->id_permintaan)->count();
-                    $temuanSelesai = Temuan::where('id_permintaan', $temuan->id_permintaan)
-                        ->where('status_temuan', 'Selesai')->count();
-                    if ($totalTemuan > 0 && $temuanSelesai === $totalTemuan) {
-                        PermintaanData::where('id_permintaan', $temuan->id_permintaan)
-                            ->update(['status_permintaan' => 'Selesai']);
-                    }
-                }
+                // $temuan = Temuan::find($validated['id_temuan']);
+                // if ($temuan && $temuan->id_permintaan) {
+                //     $totalTemuan = Temuan::where('id_permintaan', $temuan->id_permintaan)->count();
+                //     $temuanSelesai = Temuan::where('id_permintaan', $temuan->id_permintaan)
+                //         ->where('status_temuan', 'Selesai')->count();
+                //     if ($totalTemuan > 0 && $temuanSelesai === $totalTemuan) {
+                //         PermintaanData::where('id_permintaan', $temuan->id_permintaan)
+                //             ->update(['status_permintaan' => 'Selesai']);
+                //     }
+                // }
             }
 
             return response()->json([

@@ -13,6 +13,22 @@ class TemuanController extends Controller
     private function transformTemuans($temuans)
     {
         return $temuans->map(function($t) {
+            // Cari tindak lanjut terkait temuan
+            $tindakLanjut = null;
+            if ($t->responTemuans && count($t->responTemuans) > 0) {
+                foreach ($t->responTemuans as $respon) {
+                    if ($respon->status_respon === 'Diterima') {
+                        $tindakLanjut = \App\Models\TindakLanjut::where('id_respon', $respon->id_respon)->first();
+                        break;
+                    }
+                }
+            }
+            $verifikasi = null;
+            if ($tindakLanjut) {
+                $verifikasi = \App\Models\Verifikasi::where('id_tindak_lanjut', $tindakLanjut->id_tindak_lanjut)
+                    ->orderBy('tanggal_verifikasi', 'desc')
+                    ->first();
+            }
             return [
                 'id_temuan' => $t->id_temuan,
                 'id_permintaan' => $t->id_permintaan,
@@ -33,6 +49,11 @@ class TemuanController extends Controller
                 'permintaanData' => $t->permintaanData,
                 'auditor' => $t->auditor,
                 'auditee' => $t->auditee,
+                'verifikasi' => $verifikasi ? [
+                    'status_verifikasi' => $verifikasi->status_verifikasi,
+                    'catatan' => $verifikasi->catatan,
+                    'tanggal_verifikasi' => $verifikasi->tanggal_verifikasi,
+                ] : null,
             ];
         });
     }

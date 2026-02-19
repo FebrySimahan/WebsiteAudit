@@ -128,8 +128,9 @@ const AuditeeTemuan = () => {
         );
     };
 
+    // Fungsi pengecekan penolakan verifikasi (fallback ke relasi yang ada)
     const hasRejectedVerifikasi = (temuan: TemuanItem) => {
-        return temuan.verifikasi_ditolak !== undefined && temuan.verifikasi_ditolak !== null;
+        return temuan.verifikasi && temuan.verifikasi.status_verifikasi === "Ditolak";
     };
 
     const handleResponTemuan = async (status: "Diterima" | "Ditolak") => {
@@ -272,6 +273,16 @@ const AuditeeTemuan = () => {
                                             </div>
                                         )}
 
+                                        {temuan.status_temuan === "Menunggu Tindaklanjut" && hasRejectedVerifikasi(temuan) && (
+                                            <div className="bg-red-50 border border-red-200 rounded p-3 mb-3">
+                                                <div className="text-xs text-red-700 leading-relaxed">
+                                                    <span className="font-medium">Catatan Penolakan:</span>
+                                                <p className="text-red-700">{temuan.verifikasi?.catatan}</p>
+                                                </div>
+                                                {/* <p className="font-semibold text-red-800 mb-1">Catatan Penolakan:</p> */}
+                                            </div>
+                                        )}
+
                                         <div className="flex justify-end gap-2 pt-3">
                                             <button
                                                 onClick={() => {
@@ -328,12 +339,7 @@ const AuditeeTemuan = () => {
                                             )}
                                         </div>
 
-                                        {temuan.status_temuan === "Menunggu Tindaklanjut" && hasRejectedVerifikasi(temuan) && (
-                                            <div className="bg-red-50 border border-red-200 rounded p-2 text-xs mt-3">
-                                                <p className="font-semibold text-red-800 mb-1">Catatan Penolakan:</p>
-                                                <p className="text-red-700">{temuan.verifikasi_ditolak?.catatan}</p>
-                                            </div>
-                                        )}
+
                                     </div>
                                 );
                             })
@@ -446,8 +452,8 @@ const AuditeeTemuan = () => {
                 onTanggalKomitmenChange={setTanggalKomitmen}
                 onSubmit={handleTindakLanjut}
                 isLoading={tindakLanjutLoading}
-                hasRejectedVerifikasi={selectedTemuan ? hasRejectedVerifikasi(selectedTemuan) : false}
-                rejectionNote={selectedTemuan?.verifikasi_ditolak?.catatan}
+                hasRejectedVerifikasi={selectedTemuan ? !!hasRejectedVerifikasi(selectedTemuan) : false}
+                rejectionNote={selectedTemuan?.verifikasi?.catatan}
             />
 
             <ModalDetailTemuan

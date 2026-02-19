@@ -70,25 +70,5 @@ class SuratTugasController extends Controller
             'data' => $suratTugas
         ], 201);
     }
-
-    public function getSuratTugasByAuditor()
-    {
-        try {
-            $userId = auth()->id();
-            
-            $suratTugas = SuratTugasPemeriksaan::where('id_auditor', $userId)
-                ->get(['id_surat', 'unit_kerja', 'tujuan_audit', 'tanggal_mulai', 'tanggal_selesai']);
-
-            return response()->json([
-                'success' => true,
-                'data' => $suratTugas
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data surat tugas: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
 }
 

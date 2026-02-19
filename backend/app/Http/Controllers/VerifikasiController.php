@@ -33,19 +33,26 @@ class VerifikasiController extends Controller
                 ], 404);
             }
 
+
             $validated['id_auditor'] = $request->user()->id;
-            $verifikasi = Verifikasi::create($validated);
 
-            
+            $verifikasi = Verifikasi::where('id_tindak_lanjut', $validated['id_tindak_lanjut'])->first();
+            if ($verifikasi) {
+                $verifikasi->update([
+                    'status_verifikasi' => $validated['status_verifikasi'],
+                    'catatan' => $validated['catatan'],
+                    'tanggal_verifikasi' => $validated['tanggal_verifikasi'],
+                    'id_auditor' => $validated['id_auditor'],
+                ]);
+            } else {
+                $verifikasi = Verifikasi::create($validated);
+            }
 
-            // Get id_temuan dari tindak_lanjut melalui respon_temuan
             $idTemuan = $tindakLanjut->responTemuan->id_temuan ?? null;
 
             if ($idTemuan) {
-              
                 if ($validated['status_verifikasi'] === 'Diterima') {
                     try {
-                        // update status tindak lanjut
                         $tindakLanjut->update(['status' => 'Selesai']);
                     } catch (\Exception $e) {
                         \Log::error('Gagal mengupdate status tindak lanjut: ' . $e->getMessage());
@@ -53,7 +60,6 @@ class VerifikasiController extends Controller
 
                     $this->updateTemuanStatusWhenVerified($idTemuan);
                 } else {
-                    // Jika ditolak, update status temuan kembali ke "Menunggu Tindaklanjut"
                     Temuan::where('id_temuan', $idTemuan)
                         ->update(['status_temuan' => 'Menunggu Tindaklanjut']);
                 }
@@ -94,12 +100,7 @@ class VerifikasiController extends Controller
                 ->where('status_temuan', '!=', 'Selesai')
                 ->count();
 
-            if ($temuanBelumSelesai == 0) {
-                PermintaanData::where('id_permintaan', $idPermintaan)
-                    ->update(['status_permintaan' => 'Selesai']);
-
-                
-            }
+            // Dihapus: auto update status_permintaan menjadi Selesai
         } catch (\Exception $e) {
         }
     }

@@ -49,7 +49,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/for-temuan-page', [SuratTugasController::class, 'indexForTemuanPage']);
         Route::get('/search', [SuratTugasController::class, 'search']);
         Route::post('/create', [SuratTugasController::class, 'create']);
-        Route::get('/auditor/get-surat-tugas', [SuratTugasController::class, 'getSuratTugasByAuditor']);
         Route::get('/{id}/pdf', [PdfController::class, 'generateSuratTugas']);
     });
     
@@ -67,6 +66,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/auditor/{id}/pdf-preview', [PdfController::class, 'previewPermintaanDataAuditor']);
         Route::get('/auditor/{id}/pdf', [PdfController::class, 'generatePermintaanData']);
         Route::post('/auditor/create', [PermintaanDataController::class, 'createPermintaanData']);
+        Route::post('/{id}/set-selesai', [PermintaanDataController::class, 'setSelesai']);
+
 
         // punya direksi
         Route::get('/direksi', [PermintaanDataController::class, 'index']);         

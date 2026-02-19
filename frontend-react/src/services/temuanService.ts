@@ -14,11 +14,10 @@ export interface TemuanItem {
     tingkat_keparahan: string;
     status_temuan: string;
     responTemuans?: ResponTemuan[];
-    verifikasi_ditolak?: {
-        id_verifikasi: number;
-        id_temuan: number;
-        catatan: string;
+    verifikasi?: {
         status_verifikasi: string;
+        catatan: string;
+        tanggal_verifikasi: string;
     };
 }
 
