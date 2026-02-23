@@ -93,17 +93,6 @@ const temuanService = {
         }
     },
 
-    searchByAuditee: async (judul: string): Promise<TemuanItem[]> => {
-        try {
-            const res = await api.get<TemuanResponse>("/temuan/search-by-auditee", {
-                params: { judul }
-            });
-            return Array.isArray(res.data.data) ? res.data.data : [res.data.data];
-        } catch (error) {
-            throw error;
-        }
-    },
-
     filterByKeparahan: async (keparahan: string, page: number = 1, perPage: number = 5): Promise<TemuanPaginatedResponse> => {
         try {
             const res = await api.get<TemuanPaginatedResponse>("/temuan/filter-keparahan", {
@@ -119,12 +108,16 @@ const temuanService = {
         }
     },
 
-    filterByStatus: async (status: string): Promise<TemuanItem[]> => {
+    filterByStatus: async (status: string, page: number = 1, perPage: number = 5): Promise<TemuanPaginatedResponse> => {
         try {
-            const res = await api.get<TemuanResponse>("/temuan/filter-status", {
-                params: { status }
+            const res = await api.get<TemuanPaginatedResponse>("/temuan/filter-status", {
+                params: { status, page, per_page: perPage }
             });
-            return Array.isArray(res.data.data) ? res.data.data : [res.data.data];
+            return {
+                success: res.data.success,
+                data: res.data.data,
+                pagination: res.data.pagination,
+            };
         } catch (error) {
             throw error;
         }

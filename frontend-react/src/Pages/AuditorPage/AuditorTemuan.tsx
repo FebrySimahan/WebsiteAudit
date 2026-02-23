@@ -36,7 +36,6 @@ const AuditorTemuan = () => {
     const [auditees, setAuditees] = useState<any[]>([]);
     const [permintaanDataList, setPermintaanDataList] = useState<any[]>([]);
 
-    // Verification states
     const [showVerifikasiModal, setShowVerifikasiModal] = useState(false);
     const [selectedTemuanForVerifikasi, setSelectedTemuanForVerifikasi] = useState<TemuanItem | null>(null);
     const [tindakLanjutData, setTindakLanjutData] = useState<any>(null);
@@ -60,16 +59,14 @@ const AuditorTemuan = () => {
         try {
             setLoading(true);
             setError("");
-
             if (filterStatus === 'all') {
                 const result = await temuanService.getAllPaginated(currentPage, perPage);
                 setTemuan(result.data);
                 setPagination(result.pagination);
             } else {
-                const result = await temuanService.filterByStatus(filterStatus);
-                setTemuan(result);
-                setPagination(null);
-                setCurrentPage(1);
+                const result = await temuanService.filterByStatus(filterStatus, currentPage, perPage);
+                setTemuan(result.data);
+                setPagination(result.pagination);
             }
         } catch (err: any) {
             setError(err.response?.data?.message || "Gagal memuat data");
@@ -96,22 +93,8 @@ const AuditorTemuan = () => {
     };
 
     const handleFilterStatus = async (status: string) => {
-        try {
-            setLoading(true);
-            setError("");
-            if (status === "all") {
-                await fetchTemuan();
-            } else {
-                const result = await temuanService.filterByStatus(status);
-                setTemuan(result);
-            }
-            setFilterStatus(status as any);
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Gagal filter data");
-            console.error("Error:", err);
-        } finally {
-            setLoading(false);
-        }
+        setFilterStatus(status as any);
+        setCurrentPage(1);
     };
 
     const loadOptionsForModal = async () => {
@@ -120,8 +103,6 @@ const AuditorTemuan = () => {
             const permintaanList = await permintaanDataService.getAll();
 
             setPermintaanDataList(permintaanList);
-
-            // Extract auditees dari permintaanList untuk backward compatibility
             const auditeeMap = new Map();
             permintaanList.forEach((p: any) => {
                 if (p.auditee && !auditeeMap.has(p.auditee.id)) {
@@ -361,7 +342,7 @@ const AuditorTemuan = () => {
                             temuan.map((item, index) => (
                                 <div
                                     key={`temuan-${item.id_temuan}-${index}`}
-                                    className="bg-white rounded-lg p-5 border border-blue-500 hover:shadow-lg transition"
+                                    className="bg-white rounded-lg p-5 border border-blue-500 transition"
                                 >
                                     <div className="flex items-start justify-between mb-3">
                                         <h3 className="text-lg font-semibold text-gray-800 flex-1 pr-2">
@@ -511,7 +492,6 @@ const AuditorTemuan = () => {
                     getStatusColor={getStatusColor}
                 />
 
-                {/* Create Modal */}
                 <ModalCreateTemuan
                     isOpen={showCreateModal}
                     onOpenChange={setShowCreateModal}

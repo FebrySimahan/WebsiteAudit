@@ -69,7 +69,6 @@ const AuditorSuratTugas = () => {
     };
 
     useEffect(() => {
-        // Get user ID dari session
         const userStr = sessionStorage.getItem("cached_user");
         if (userStr) {
             const userData = JSON.parse(userStr);
@@ -109,6 +108,8 @@ const AuditorSuratTugas = () => {
             setError("");
             const data = await SuratTugasPemeriksaanService.searchByUnitKerja(query);
             setSuratTugas(data);
+            setPagination(null);
+            setCurrentPage(1);
         } catch (err: any) {
             setError(err.response?.data?.message || "Gagal mencari surat tugas");
             console.error("Error:", err);
@@ -244,7 +245,7 @@ const AuditorSuratTugas = () => {
                     </div>
                 )}
 
-                
+
                 {pagination && pagination.last_page > 1 && (
                     <div className="flex flex-col items-center gap-4 mt-6">
                         <Pagination>

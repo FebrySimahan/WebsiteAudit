@@ -115,7 +115,7 @@ class ScoreboardController extends Controller
                     $query->where('status_respon', 'Diterima');
                 })
                 ->with('auditee')
-                ->orderBy('tingkat_keparahan', 'desc')
+                ->orderByRaw("FIELD(status_temuan, 'Terbuka', 'Menunggu Tindaklanjut', 'Menunggu Verifikasi', 'Selesai')")
                 ->get();
 
             $totalPoin = $poinAwal - $totalPotongan;
@@ -137,5 +137,6 @@ class ScoreboardController extends Controller
                 'success' => true,
                 'data' => $scoreboardByRole,
             ]);
-        }
     }
+}
+

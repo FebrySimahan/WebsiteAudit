@@ -31,7 +31,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center min-h-screen bg-sky-600">
       <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm">
         <h1 className="text-2xl font-bold text-center text-gray-800 mb-2">Login</h1>
         <p className="text-center text-gray-500 text-sm mb-6">Website Audit System</p>

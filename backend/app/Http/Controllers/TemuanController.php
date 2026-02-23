@@ -58,26 +58,33 @@ class TemuanController extends Controller
         });
     }
    
-    public function index(Request $request): JsonResponse
-    {
-        $perPage = $request->input('per_page', 5);
-        $page = $request->input('page', 1);
+   public function index(Request $request): JsonResponse
+{
+    $perPage = $request->input('per_page', 5);
+    $page = $request->input('page', 1);
+    $status = $request->input('status'); // Ambil status dari query param
 
-        $temuans = Temuan::with(['permintaanData', 'auditor', 'auditee', 'responTemuans'])
-            ->orderBy('tanggal_temuan', 'desc')
-            ->paginate($perPage);
-        
-        return response()->json([
-            'success' => true,
-            'data' => $this->transformTemuans($temuans->getCollection()),
-            'pagination' => [
-                'current_page' => $temuans->currentPage(),
-                'last_page' => $temuans->lastPage(),
-                'per_page' => $temuans->perPage(),
-                'total' => $temuans->total(),
-            ],
-        ]);
+    $query = Temuan::with(['permintaanData', 'auditor', 'auditee', 'responTemuans'])
+        ->orderBy('tanggal_temuan', 'desc');
+
+    // Jika ada filter status, tambahkan ke query
+    if ($status && $status !== 'all') {
+        $query->where('status_temuan', $status);
     }
+
+    $temuans = $query->paginate($perPage);
+
+    return response()->json([
+        'success' => true,
+        'data' => $this->transformTemuans($temuans->getCollection()),
+        'pagination' => [
+            'current_page' => $temuans->currentPage(),
+            'last_page' => $temuans->lastPage(),
+            'per_page' => $temuans->perPage(),
+            'total' => $temuans->total(),
+        ],
+    ]);
+}
 
     public function countByStatus(Request $request): JsonResponse
     {
@@ -123,28 +130,6 @@ class TemuanController extends Controller
         }
     }
 
-    public function searchByAuditee(Request $request): JsonResponse
-    {
-        $judul = $request->input('judul');
-        
-        try {
-            $temuans = Temuan::with(['permintaanData', 'auditor', 'auditee', 'responTemuans'])
-                ->where('judul_temuan', 'LIKE', '%' . $judul . '%')
-                ->where('id_auditee', $request->user()->id)
-                ->get();
-
-            return response()->json([
-                'success' => true,
-                'data' => $this->transformTemuans($temuans),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mencari data temuan: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
-
     public function filterByKeparahan(Request $request): JsonResponse
     {
         $keparahan = $request->input('keparahan');
@@ -174,25 +159,37 @@ class TemuanController extends Controller
     }
 
     public function filterByStatus(Request $request): JsonResponse
-    {
-        $status = $request->input('status');
-        
-        try {
-            $temuans = Temuan::with(['permintaanData', 'auditor', 'auditee', 'responTemuans'])
-                ->where('status_temuan', $status)
-                ->get();
+{
+    $status = $request->input('status');
+    $perPage = $request->input('per_page', 5);
 
-            return response()->json([
-                'success' => true,
-                'data' => $this->transformTemuans($temuans),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data temuan: ' . $e->getMessage(),
-            ], 500);
+    try {
+        $query = Temuan::with(['permintaanData', 'auditor', 'auditee', 'responTemuans'])
+            ->orderBy('tanggal_temuan', 'desc');
+
+        if ($status && $status !== 'all') {
+            $query->where('status_temuan', $status);
         }
+
+        $temuans = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->transformTemuans($temuans->getCollection()),
+            'pagination' => [
+                'current_page' => $temuans->currentPage(),
+                'last_page' => $temuans->lastPage(),
+                'per_page' => $temuans->perPage(),
+                'total' => $temuans->total(),
+            ],
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal mengambil data temuan: ' . $e->getMessage(),
+        ], 500);
     }
+}
 
     public function showByAuditeeRole(Request $request): JsonResponse
     {
@@ -222,30 +219,6 @@ class TemuanController extends Controller
                 'error' => $e->getTrace(),
             ], 500);
         }
-    }
-
-    public function tombolRespon(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'id_temuan' => 'required|exists:temuans,id_temuan',
-            'id_auditee' => 'required|exists:users,id',
-            'status_respon' => 'required|in:Diterima,Ditolak',
-            'alasan_penolakan' => 'nullable|string',
-            'tanggal_respon' => 'required|date',
-        ]);
-
-        $responTemuan = ResponTemuan::create($validated);
-
-
-        if ($validated['status_respon'] === 'Diterima') {
-            Temuan::where('id_temuan', $validated['id_temuan'])
-                ->update(['status_temuan' => 'Menunggu Tindaklanjut']);
-        } elseif ($validated['status_respon'] === 'Ditolak') {
-            Temuan::where('id_temuan', $validated['id_temuan'])
-                ->update(['status_temuan' => 'Selesai']);
-        }
-
-        return response()->json($responTemuan, 201);
     }
 
     public function createTemuan(Request $request): JsonResponse

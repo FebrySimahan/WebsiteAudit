@@ -40,30 +40,50 @@ const AuditeeTemuan = () => {
     const perPage = 5;
 
     useEffect(() => {
-        fetchTemuanByRole();
-    }, [currentPage]);
+        if (filterStatus === "Semua") {
+            setCurrentPage(1);
+            fetchTemuanByRole();
+        } else {
+            setCurrentPage(1);
+            fetchTemuanByStatus(filterStatus, 1);
+        }
+    }, [filterStatus]);
 
     useEffect(() => {
         const debounceTimer = setTimeout(() => {
             if (searchQuery.trim()) {
-                handleSearch(searchQuery);
+                handleSearch(searchQuery.trim());
             } else {
-                setCurrentPage(1);
-                fetchTemuanByRole();
+                if (filterStatus === "Semua") {
+                    fetchTemuanByRole();
+                } else {
+                    fetchTemuanByStatus(filterStatus, currentPage);
+                }
             }
         }, 500);
+
         return () => clearTimeout(debounceTimer);
-    }, [searchQuery]);
+    }, [searchQuery, filterStatus, currentPage]);
 
     const handleSearch = async (query: string) => {
         try {
             setLoading(true);
             setError("");
-            const result = await temuanDataService.searchByAuditee(query);
-            setTemuanData(result);
+            const result = await temuanDataService.showByAuditeeRole(currentPage, perPage);
+            let filtered = result.data;
+
+            if (query) {
+                filtered = filtered.filter((item: TemuanItem) =>
+                    item.judul_temuan.toLowerCase().includes(query.toLowerCase())
+                );
+            }
+            if (filterStatus !== "Semua") {
+                filtered = filtered.filter((item: TemuanItem) => item.status_temuan === filterStatus);
+            }
+            setTemuanData(filtered);
+            setPagination(result.pagination);
         } catch (err: any) {
             setError(err.response?.data?.message || "Gagal mencari data");
-            console.error("Error:", err);
         } finally {
             setLoading(false);
         }
@@ -91,7 +111,27 @@ const AuditeeTemuan = () => {
         } finally {
             setLoading(false);
         }
-    }; const getSeverityColor = (tingkat: string) => {
+    };
+
+    const fetchTemuanByStatus = async (status: string, page: number = 1) => {
+        try {
+            setLoading(true);
+            setError("");
+            // Ambil data temuan auditee sesuai role
+            const result = await temuanDataService.showByAuditeeRole(page, perPage);
+            // Filter status
+            const filtered = result.data.filter((item: TemuanItem) => item.status_temuan === status);
+            setTemuanData(filtered);
+            setPagination(result.pagination);
+        } catch (err: any) {
+            setError(err.response?.data?.message || "Gagal memuat data temuan");
+            console.error("Error:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getSeverityColor = (tingkat: string) => {
         switch (tingkat?.toLowerCase()) {
             case "rendah":
                 return "bg-blue-100 text-blue-800";
@@ -128,7 +168,6 @@ const AuditeeTemuan = () => {
         );
     };
 
-    // Fungsi pengecekan penolakan verifikasi (fallback ke relasi yang ada)
     const hasRejectedVerifikasi = (temuan: TemuanItem) => {
         return temuan.verifikasi && temuan.verifikasi.status_verifikasi === "Ditolak";
     };
@@ -198,7 +237,7 @@ const AuditeeTemuan = () => {
                         placeholder="Cari berdasarkan judul temuan..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border rounded"
                     />
                 </div>
 
@@ -213,7 +252,6 @@ const AuditeeTemuan = () => {
                         <button
                             key={status}
                             onClick={() => {
-                                setCurrentPage(1);
                                 setFilterStatus(status);
                             }}
                             className={`px-4 py-2 rounded-lg font-semibold text-sm transition ${filterStatus === status
@@ -277,7 +315,7 @@ const AuditeeTemuan = () => {
                                             <div className="bg-red-50 border border-red-200 rounded p-3 mb-3">
                                                 <div className="text-xs text-red-700 leading-relaxed">
                                                     <span className="font-medium">Catatan Penolakan:</span>
-                                                <p className="text-red-700">{temuan.verifikasi?.catatan}</p>
+                                                    <p className="text-red-700">{temuan.verifikasi?.catatan}</p>
                                                 </div>
                                                 {/* <p className="font-semibold text-red-800 mb-1">Catatan Penolakan:</p> */}
                                             </div>
@@ -354,7 +392,13 @@ const AuditeeTemuan = () => {
                             <PaginationContent>
                                 <PaginationItem>
                                     <PaginationPrevious
-                                        onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+                                        onClick={() => {
+                                            if (currentPage > 1) {
+                                                setCurrentPage(currentPage - 1);
+                                                if (filterStatus !== "Semua") fetchTemuanByStatus(filterStatus, currentPage - 1);
+                                                else fetchTemuanByRole();
+                                            }
+                                        }}
                                         className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
                                     />
                                 </PaginationItem>
@@ -386,7 +430,11 @@ const AuditeeTemuan = () => {
                                         pages.push(
                                             <PaginationItem key={i}>
                                                 <PaginationLink
-                                                    onClick={() => setCurrentPage(i)}
+                                                    onClick={() => {
+                                                        setCurrentPage(i);
+                                                        if (filterStatus !== "Semua") fetchTemuanByStatus(filterStatus, i);
+                                                        else fetchTemuanByRole();
+                                                    }}
                                                     isActive={currentPage === i}
                                                 >
                                                     {i}
@@ -407,7 +455,11 @@ const AuditeeTemuan = () => {
                                         pages.push(
                                             <PaginationItem key={totalPages}>
                                                 <PaginationLink
-                                                    onClick={() => setCurrentPage(totalPages)}
+                                                    onClick={() => {
+                                                        setCurrentPage(totalPages);
+                                                        if (filterStatus !== "Semua") fetchTemuanByStatus(filterStatus, totalPages);
+                                                        else fetchTemuanByRole();
+                                                    }}
                                                     isActive={currentPage === totalPages}
                                                 >
                                                     {totalPages}
@@ -421,7 +473,13 @@ const AuditeeTemuan = () => {
 
                                 <PaginationItem>
                                     <PaginationNext
-                                        onClick={() => currentPage < pagination.last_page && setCurrentPage(currentPage + 1)}
+                                        onClick={() => {
+                                            if (currentPage < pagination.last_page) {
+                                                setCurrentPage(currentPage + 1);
+                                                if (filterStatus !== "Semua") fetchTemuanByStatus(filterStatus, currentPage + 1);
+                                                else fetchTemuanByRole();
+                                            }
+                                        }}
                                         className={currentPage >= pagination.last_page ? "pointer-events-none opacity-50" : ""}
                                     />
                                 </PaginationItem>

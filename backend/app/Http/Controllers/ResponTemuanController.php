@@ -12,14 +12,7 @@ use Exception;
 
 class ResponTemuanController extends Controller
 {
-    /**
-     * Display all respon temuans
-     */
-    public function show(): JsonResponse
-    {
-        $responTemuans = ResponTemuan::with(['temuan', 'auditee', 'tindakLanjuts'])->get();
-        return response()->json($responTemuans);
-    }
+
 
     public function create(Request $request): JsonResponse
     {

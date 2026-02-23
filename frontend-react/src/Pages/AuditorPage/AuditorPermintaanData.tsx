@@ -85,12 +85,23 @@ const AuditorPermintaanData = () => {
         }
     };
 
+    const handleSetSelesai = async (id_permintaan: number) => {
+        try {
+            await permintaanDataService.setSelesai(id_permintaan);
+            fetchPermintaanData();
+        } catch (err: any) {
+            setError(err.response?.data?.message || "Gagal menyelesaikan permintaan");
+        }
+    };
+
     const handleSearch = async (query: string) => {
         try {
             setLoading(true);
             setError("");
             const result = await permintaanDataService.searchByJudulAuditor(query);
             setPermintaanData(result);
+            setPagination(null);
+            setCurrentPage(1);
         } catch (err: any) {
             setError(err.response?.data?.message || "Gagal mencari data");
             console.error("Error:", err);
@@ -316,6 +327,16 @@ const AuditorPermintaanData = () => {
                                     </div>
 
                                     <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleSetSelesai(item.id_permintaan)}
+                                            disabled={item.status_permintaan === "Aktif" || item.status_permintaan === "Selesai"}
+                                            className={`flex items-center gap-1 px-3 py-2 rounded transition text-xs font-medium ${item.status_permintaan === "Selesai" || item.status_permintaan === "Aktif"
+                                                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                                : "bg-green-600 text-white hover:bg-green-700"
+                                                }`}
+                                        >
+                                            Selesaikan
+                                        </button>
                                         <button
                                             onClick={() => {
                                                 setSelectedItem(item);

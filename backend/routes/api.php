@@ -23,7 +23,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('temuan')->group(function () {
         Route::get('/', [TemuanController::class, 'index']);                   
         Route::get('/search', [TemuanController::class, 'searchByJudul']);
-        Route::get('/search-by-auditee', [TemuanController::class, 'searchByAuditee']);
         Route::get('/filter-keparahan', [TemuanController::class, 'filterByKeparahan']);
         Route::get('/filter-status', [TemuanController::class, 'filterByStatus']);
         Route::get('/show-auditee-role', [TemuanController::class, 'showByAuditeeRole']);

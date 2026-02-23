@@ -207,6 +207,14 @@ const permintaanDataService = {
         }
     },
 
+    setSelesai: async (id_permintaan: number): Promise<void> => {
+        try {
+            await api.post(`/permintaan-data/${id_permintaan}/set-selesai`);
+        } catch (error) {
+            throw error;
+        }
+    },
+
     getAuditees: async () => {
         try {
             const res = await api.get("/users/auditees");
