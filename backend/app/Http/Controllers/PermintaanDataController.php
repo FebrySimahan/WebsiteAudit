@@ -16,7 +16,8 @@ class PermintaanDataController extends Controller
             $page = $request->input('page', 1);
 
             $permintaanDatas = PermintaanData::with('auditor', 'auditee', 'surat', 'jadwal_audits')
-                ->paginate($perPage);
+            ->orderBy('created_at', 'desc')     
+            ->paginate($perPage);
 
             return response()->json([
                 'success' => true,
@@ -27,6 +28,25 @@ class PermintaanDataController extends Controller
                     'per_page' => $permintaanDatas->perPage(),
                     'total' => $permintaanDatas->total(),
                 ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data permintaan: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function indexDropdown(Request $request)
+    {
+        try {
+            $permintaanDatas = PermintaanData::with('auditor', 'auditee', 'surat', 'jadwal_audits')
+            ->orderBy('created_at', 'desc')    
+            ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $permintaanDatas,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -224,7 +244,7 @@ class PermintaanDataController extends Controller
         }
     }
 
-    public function filterByStatusAuditor(Request $request)
+    public function filterByStatus(Request $request)
     {
         $status = $request->input('status');
         $perPage = $request->input('per_page', 5);
@@ -259,17 +279,27 @@ class PermintaanDataController extends Controller
 
             $validated = $request->validate([
                 'id_surat' => 'required|integer|exists:surat_tugas_pemeriksaans,id_surat',
-                'id_auditee' => 'required|integer|exists:users,id',
                 'judul_permintaan' => 'required|string|max:255',
                 'deskripsi' => 'required|string',
-                'divisi' => 'required|in:Operasional,Marketing',
-                'jenis_permintaan' => 'required|in:Rutin,Sekali',
+                'divisi' => 'required|string',
+                'level_role' => 'required|string',
+                'jenis_permintaan' => 'required|string',
                 'jadwal_audit' => 'required|array|min:1',
                 'jadwal_audit.*' => 'required|date_format:Y-m-d',
             ]);
 
             $validated['id_auditor'] = $userId;
             $validated['status_permintaan'] = 'Aktif';
+
+            $divisi = strtolower(trim($validated['divisi']));
+
+            if ($divisi === 'kepatuhan') {
+                $validated['level_role'] = 'PE';
+                $validated['id_auditee'] = 44;
+            } elseif (in_array($divisi, ['Manajemen_Remedial', 'manajemen remedial', 'mr'])) {
+                $validated['level_role'] = 'PE';
+                $validated['id_auditee'] = 27;
+            }
 
          
             $jadwalAuditDates = $validated['jadwal_audit'];

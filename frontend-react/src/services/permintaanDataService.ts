@@ -27,15 +27,14 @@ export interface PermintaanDataItem {
     id_surat?: number;
     judul_permintaan: string;
     id_auditor: number;
-    id_auditee: number;
     divisi: string;
     deskripsi: string;
     jenis_permintaan: string;
     status_permintaan: string;
+    level_role: string;
     created_at?: string;
     updated_at?: string;
     auditor?: User;
-    auditee?: User;
     surat?: SuratTugas;
     jadwal_audits?: JadwalAudit[];
 }
@@ -62,9 +61,22 @@ export interface PaginatedResponse {
 
 const permintaanDataService = {
 
+    /**
+     * Ambil semua data permintaan untuk dropdown (tanpa limit 5 data)
+     */
+    getAllDropdown: async (): Promise<PermintaanDataItem[]> => {
+        try {
+            const res = await api.get<PermintaanDataResponse>("/permintaan-data/show-all-dropdown");
+            const data = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     getAll: async (): Promise<PermintaanDataItem[]> => {
         try {
-            const res = await api.get<PermintaanDataResponse>("/permintaan-data/direksi");
+            const res = await api.get<PermintaanDataResponse>("/permintaan-data/show-all-paginated");
             const data = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
             console.log("Permintaan Data Response:", data);
             console.log("First item:", data[0]);
@@ -88,7 +100,7 @@ const permintaanDataService = {
 
     getAllPaginated: async (page: number = 1, perPage: number = 5): Promise<PaginatedResponse> => {
         try {
-            const res = await api.get<PaginatedResponse>(`/permintaan-data/direksi?page=${page}&per_page=${perPage}`);
+            const res = await api.get<PaginatedResponse>(`/permintaan-data/show-all-paginated?page=${page}&per_page=${perPage}`);
             return {
                 success: res.data.success,
                 data: res.data.data,
@@ -149,6 +161,21 @@ const permintaanDataService = {
         }
     },
 
+    searchByJudulPaginated: async (judul: string, page: number = 1, perPage: number = 5): Promise<PaginatedResponse> => {
+        try {
+            const res = await api.get<PaginatedResponse>("/permintaan-data/search", {
+                params: { judul, page, per_page: perPage }
+            });
+            return {
+                success: res.data.success,
+                data: res.data.data,
+                pagination: res.data.pagination,
+            };
+        } catch (error) {
+            throw error;
+        }
+    },
+
 
     getAllByAuditorPaginated: async (page: number = 1, perPage: number = 5): Promise<PaginatedResponse> => {
         try {
@@ -175,7 +202,7 @@ const permintaanDataService = {
         }
     },
 
-    filterByStatusAuditor: async (status: string, page: number = 1, perPage: number = 5): Promise<PaginatedResponse> => {
+    filterByStatus: async (status: string, page: number = 1, perPage: number = 5): Promise<PaginatedResponse> => {
         try {
             const res = await api.get<PaginatedResponse>("/permintaan-data/auditor/filter-status", {
                 params: { status, page, per_page: perPage }
@@ -190,9 +217,24 @@ const permintaanDataService = {
         }
     },
 
+    filterByStatusDireksi: async (status: string, page: number = 1, perPage: number = 5): Promise<PaginatedResponse> => {
+        try {
+            const res = await api.get<PaginatedResponse>("/permintaan-data/direksi/filter-status", {
+                params: { status, page, per_page: perPage }
+            });
+            return {
+                success: res.data.success,
+                data: res.data.data,
+                pagination: res.data.pagination,
+            };
+        } catch (error) {
+            throw error;
+        }
+    },
+
     createPermintaanData: async (payload: {
         id_surat: number;
-        id_auditee: number;
+        level_role: string;
         judul_permintaan: string;
         deskripsi: string;
         divisi: string;

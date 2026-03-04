@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_respon');
             $table->unsignedBigInteger('id_auditee');
             $table->text('deskripsi_tindak_lanjut');
-            $table->date('tanggal_komitmen');
+            $table->date('deskripsi_komitmen');
             $table->enum('status', ['Proses', 'Selesai'])->default('Proses');
             $table->timestamps();
 

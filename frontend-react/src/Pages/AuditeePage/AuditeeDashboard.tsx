@@ -13,10 +13,12 @@ const AuditeeDashboard = () => {
   const [userRole, setUserRole] = useState<string>("");
   const [temuanData, setTemuanData] = useState<any[]>([]);
   const [openCount, setOpenCount] = useState<number>(0);
+  const [tindakLanjutRejectedCount, setTindakLanjutRejectedCount] = useState<number>(0);
 
   useEffect(() => {
     fetchUserDataAndScore();
     fetchOpenCount();
+    fetchTindakLanjutAndRejected();
   }, []);
 
   const fetchUserDataAndScore = async () => {
@@ -28,38 +30,71 @@ const AuditeeDashboard = () => {
       if (userStr) {
         const userData = JSON.parse(userStr);
         const role = userData.data?.level_role;
+        const userId = userData.data?.id;
         setUserRole(role);
 
         const scoreboardData = await scoreboardService.getScoreboard();
 
-        const roleMapping: { [key: string]: string } = {
-          'KTI': 'TI',
-          'BE': 'Remedial',
-          'FE': 'Remedial',
-          'KSR': 'Remedial',
-          'TLR': 'Remedial',
-          'SA': 'Landing',
-          'AO': 'Landing',
-          'RO': 'Landing',
-          'SO': 'Landing',
-          'TLL': 'Landing',
-          'KSL': 'Landing',
-          'FO': 'Funding',
-          'KSF': 'Funding',
-          'TLF': 'Funding',
+        const peMapping: { [key: number]: string } = {
+          44: 'Kepatuhan',
+          27: 'MR',
         };
 
-        let category = roleMapping[role] || 'Operational';
+        // Untuk PE users, ambil data temuan berdasarkan id_auditee mereka
+        if (peMapping[userId]) {
+          try {
+            const temuanResult = await temuanService.showByIdAuditee(userId, 1, 100);
+            setTemuanData(temuanResult.data || []);
 
-        if (scoreboardData.find(item => item.level_role === role)) {
-          category = role;
-        }
+            // Hitung poin berdasarkan temuan PE user
+            const totalPotongan = temuanResult.data.reduce((sum: number, temuan: any) => {
+              return sum + (
+                temuan.tingkat_keparahan === 'Rendah' ? 1 :
+                  temuan.tingkat_keparahan === 'Sedang' ? 2 :
+                    temuan.tingkat_keparahan === 'Tinggi' ? 3 : 0
+              );
+            }, 0);
 
-        const roleData = scoreboardData.find(item => item.level_role === category);
+            const poin = Math.max(100 - totalPotongan, 0);
+            setCurrentPoin(poin);
+          } catch (err) {
+            console.error('Error fetching PE temuan:', err);
+          }
+        } else {
+          // Untuk non-PE users, gunakan scoreboardData
+          const roleMapping: { [key: string]: string } = {
+            'KTI': 'Kepala Teknologi Informasi',
+            'KSO': 'Operational',
+            'KBO': 'Operational',
+            'KSA': 'Operational',
+            'KBL': 'Lending',
+            'KSL': 'Lending',
+            'TLU': 'Lending',
+            'KSR': 'Lending',
+            'KBF': 'Funding',
+            'KSF': 'Funding',
+          };
 
-        if (roleData) {
-          setCurrentPoin(roleData.poin);
-          setTemuanData(roleData.temuans || []);
+          let category = '';
+          if (roleMapping[role]) {
+            category = roleMapping[role];
+          } else {
+            category = role;
+          }
+
+          const roleData = scoreboardData.find(item => item.level_role === category);
+
+          if (roleData) {
+            setCurrentPoin(roleData.poin);
+            setTemuanData(roleData.temuans || []);
+          } else {
+            // Fallback: gunakan yang ada poin tertinggi atau yang pertama
+            const firstData = scoreboardData?.[0];
+            if (firstData) {
+              setCurrentPoin(firstData.poin);
+              setTemuanData(firstData.temuans || []);
+            }
+          }
         }
       }
     } catch (err: any) {
@@ -76,6 +111,43 @@ const AuditeeDashboard = () => {
       setOpenCount(count);
     } catch (err) {
 
+    }
+  };
+
+  const fetchTindakLanjutAndRejected = async () => {
+    try {
+      const userStr = sessionStorage.getItem("cached_user");
+      if (userStr) {
+        const userData = JSON.parse(userStr);
+        const userId = userData.data?.id;
+
+        const peMapping: { [key: number]: string } = {
+          44: 'Kepatuhan',
+          27: 'MR',
+        };
+
+        let allTemuan: any[] = [];
+
+        if (peMapping[userId]) {
+          try {
+            const temuanResult = await temuanService.showByIdAuditee(userId, 1, 100);
+            allTemuan = temuanResult.data || [];
+          } catch (err) {
+            console.error('Error fetching PE temuan:', err);
+          }
+        } else {
+          allTemuan = temuanData;
+        }
+
+        // Count temuan dengan status "Menunggu Tindaklanjut" DAN verifikasi ditolak
+        const tindakLanjutTemuan = allTemuan.filter((item: any) => item.status_temuan === "Menunggu Tindaklanjut");
+        const rejectedTemuan = tindakLanjutTemuan.filter((item: any) =>
+          item.verifikasi && item.verifikasi.status_verifikasi === "Ditolak"
+        );
+        setTindakLanjutRejectedCount(rejectedTemuan.length);
+      }
+    } catch (err) {
+      console.error('Error fetching tindak lanjut and rejected:', err);
     }
   };
 
@@ -115,6 +187,14 @@ const AuditeeDashboard = () => {
           Lihat Temuan
         </button>
 
+      ) : label === "Tindak Lanjut Ditolak" ? (
+        <button
+          onClick={() => navigate("/auditee/temuan?filter=Menunggu%20Tindaklanjut")}
+          className="bg-red-600 text-white px-4 py-2 rounded transition font-semibold text-sm sm:text-base w-full sm:w-auto whitespace-normal"
+        >
+          Lihat Temuan
+        </button>
+
       ) : null}
     </div>
   );
@@ -141,7 +221,7 @@ const AuditeeDashboard = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-            <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <StatCard
                   label="Temuan Terbuka"
@@ -150,12 +230,20 @@ const AuditeeDashboard = () => {
                   textColor="text-yellow-600"
                 />
               </div>
-              <div >
+              <div>
                 <StatCard
                   label="Total Temuan"
                   value={temuanData.length}
                   borderColor="border-blue-600"
                   textColor="text-blue-600"
+                />
+              </div>
+              <div>
+                <StatCard
+                  label="Tindak Lanjut Ditolak"
+                  value={tindakLanjutRejectedCount}
+                  borderColor="border-red-600"
+                  textColor="text-red-600"
                 />
               </div>
             </div>

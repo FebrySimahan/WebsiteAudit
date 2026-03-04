@@ -3,7 +3,7 @@ interface TindakLanjut {
     id_respon: number;
     id_auditee: number;
     deskripsi_tindak_lanjut: string;
-    tanggal_komitmen: string;
+    deskripsi_komitmen: string;
     status: string;
 }
 
@@ -19,7 +19,7 @@ const tindakLanjutService = {
         id_respon: number;
         id_auditee: number;
         deskripsi_tindak_lanjut: string;
-        tanggal_komitmen: string;
+        deskripsi_komitmen: string;
         status_respon: "Proses" | "Selesai";
     }) => {
         try {
@@ -27,7 +27,7 @@ const tindakLanjutService = {
                 id_respon: data.id_respon,
                 id_auditee: data.id_auditee,
                 deskripsi_tindak_lanjut: data.deskripsi_tindak_lanjut,
-                tanggal_komitmen: data.tanggal_komitmen,
+                deskripsi_komitmen: data.deskripsi_komitmen,
                 status: data.status_respon,
             });
             return res.data;

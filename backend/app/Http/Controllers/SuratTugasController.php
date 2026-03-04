@@ -11,7 +11,7 @@ class SuratTugasController extends Controller
     {
         $perPage = $request->input('per_page', 5);
         
-        $suratTugas = SuratTugasPemeriksaan::paginate($perPage);
+        $suratTugas = SuratTugasPemeriksaan::orderBy('created_at', 'desc')->paginate($perPage);
         
         return response()->json([
             'message' => 'Daftar surat tugas pemeriksaan',
@@ -28,7 +28,7 @@ class SuratTugasController extends Controller
     public function indexForTemuanPage(Request $request)
     {
         
-        $suratTugas = SuratTugasPemeriksaan::all();
+        $suratTugas = SuratTugasPemeriksaan::orderBy('created_at', 'desc')->get();
         
         return response()->json([
             'message' => 'Daftar surat tugas pemeriksaan',
@@ -62,6 +62,8 @@ class SuratTugasController extends Controller
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
         ]);
+
+        //kalo tujuan atau deskripsi pengen panjang, didatabase tmbain aja jumlah varcharny
 
         $suratTugas = SuratTugasPemeriksaan::create($validated);
 

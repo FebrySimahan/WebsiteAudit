@@ -4,14 +4,13 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogDescription,
 } from "@/components/ui/dialog";
 import { InputField, TextareaField, SelectField, DisplayField } from "@/components/ui/FormFields";
 
 interface TemuanFormData {
     id_permintaan: string;
-    id_auditee: string;
     tanggal_temuan: string;
+    level_role: string;
     judul_temuan: string;
     kondisi_sebenarnya: string;
     keadaan_seharusnya: string;
@@ -50,13 +49,19 @@ const ModalCreateTemuan = ({
 }: ModalCreateTemuanProps) => {
     const [localPermintaanId, setLocalPermintaanId] = useState(formData.id_permintaan);
 
-   
+
     const selectedPermintaan = useMemo(
         () => permintaanDataList?.find((p) => p.id_permintaan.toString() === localPermintaanId),
         [permintaanDataList, localPermintaanId]
     );
 
- 
+    const selectedLevelRole =
+        selectedPermintaan?.auditee?.level_role ||
+        selectedPermintaan?.level_role ||
+        selectedPermintaan?.levelrole ||
+        "";
+
+
     const permintaanOptions = useMemo(
         () => permintaanDataList.map((p) => ({
             value: p.id_permintaan.toString(),
@@ -78,16 +83,27 @@ const ModalCreateTemuan = ({
         }));
     }, [selectedPermintaan]);
 
-    
+
     const handlePermintaanChange = (value: string) => {
         setLocalPermintaanId(value);
         onFormChange("id_permintaan", value);
 
         if (value) {
             const permintaan = permintaanDataList?.find((p) => p.id_permintaan.toString() === value);
+            const levelRole =
+                permintaan?.auditee?.level_role ||
+                permintaan?.level_role ||
+                permintaan?.levelrole ||
+                "";
+
+            onFormChange("levelrole", levelRole);
+
             if (permintaan?.auditee) {
                 onFormChange("id_auditee", String(permintaan.auditee.id));
             }
+        } else {
+            onFormChange("id_auditee", "");
+            onFormChange("levelrole", "");
         }
         onFormChange("tanggal_temuan", "");
     };
@@ -113,9 +129,7 @@ const ModalCreateTemuan = ({
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Buat Temuan Baru</DialogTitle>
-                    <DialogDescription>
-                        Isi formulir lengkap untuk membuat temuan audit baru.
-                    </DialogDescription>
+                    <br />
                 </DialogHeader>
 
                 <div className="space-y-4">
@@ -147,7 +161,7 @@ const ModalCreateTemuan = ({
                     <div className="grid grid-cols-2 gap-4">
                         <DisplayField
                             label="Auditee"
-                            value={selectedPermintaan?.auditee?.name || ""}
+                            value={selectedLevelRole}
                         />
 
                         <SelectField

@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <style>
+        @page {
+            margin: 20mm;
+            size: A4;
+        }
+
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
@@ -24,10 +29,10 @@
             margin-bottom: 20px;
         }
         
-        .utt{
-            /* font-weight: bold;    */
+        .utt {
             margin-left: 15px;
         }
+
         .no-surat {
             text-align: center;
             margin-bottom: 20px;
@@ -49,6 +54,7 @@
         .field {
             margin-bottom: 8px;
             display: flex;
+            page-break-inside: avoid;
         }
         
         .label {
@@ -70,15 +76,13 @@
         }
         
         .deskripsi-box {
-            
             margin: 8px 0;
             border-radius: 3px;
             white-space: pre-wrap;
             word-wrap: break-word;
             margin-bottom: 15px;
-            /* font-size: 11px; */
-            
-            margin-left: 55px
+            margin-left: 55px;
+            page-break-inside: avoid;
         }
     
         .footer {
@@ -95,15 +99,15 @@
         }
         
         .ttd {
-            position: absolute;
-            bottom: 0;
-            left: 0;
+            page-break-inside: avoid;
+            position: relative;
+            margin-top: 40px;
         }
 
         .ttd2 {
-            position: absolute;
-            bottom: 0;
-            right: 0;
+            page-break-inside: avoid;
+            position: relative;
+            margin-top: 40px;
         }
     </style>
 </head>
@@ -111,24 +115,29 @@
 
     <h1>SURAT TUGAS PEMERIKSAAN</h1>
     
+    @php
+        \Carbon\Carbon::setLocale('id');
+    @endphp
     <div class="no-surat">
-        Nomor : {{ sprintf('%03d', $suratTugas->id_surat) }}/AI/DIR-MSA/X/{{ date('Y') }}
+        Nomor : {{ sprintf('%03d', $suratTugas->id_surat) }}/AI/DIR-MSA/{{ strtoupper(\Carbon\Carbon::now()->translatedFormat('m')) }}/{{ date('Y') }}
     </div>
-    <div class="field">
+
+    <div class="field" style="display: block;">
         <p style="text-align: left;">Direksi PT BPR Madani Sejahtera Abadi, menugaskan Tim Audit :</p>
         <p style="margin-left: 15px;">1.   Ketua Tim   <span>: Lilik Setia Darmawan</span></p>
         <p style="margin-left: 15px;">2.   Anggota     <span>: Muthia Riza Fauziah</span></p>
         <p>Untuk melakukan pemeriksaan terhadap :</p>
     </div>
+
     <div class="field">
         <div class="utt">Unit Kerja : {{ $suratTugas->unit_kerja }}</div>
     </div>
-    
-  
+
     <div class="field">
         <div class="utt">Tujuan Audit   : </div>
         <div class="deskripsi-box">{{ $suratTugas->tujuan_audit }}</div>
     </div>
+
     <div class="field">
         @php
             \Carbon\Carbon::setLocale('id');
@@ -142,14 +151,13 @@
         @endif
     </div>
 
-    <div class="field">
+    <div class="field" style="display: block;">
         <p>Setelah melaksanakan pemeriksaan segera dibuat laporan hasil pemeriksaan</p>
         <p>Demikian agar dapat dilaksanakan dengan baik</p>
     </div>
-    
 
     <div class="ttd">
-        <p>Yogyakarta, {{ \Carbon\Carbon::now()->format('d F Y') }}</p>
+        <p>Yogyakarta, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
         <p>PT BPR Madani Sejahtera Abadi</p>
         <br>
         <br>
@@ -158,36 +166,33 @@
         <p>Direktur Utama</p>
     </div>
 
- 
     <div class="page-break"></div>
     
-    <h3 style="text-align : center;">PERMINTAAN DATA</h3>
+    <h3 style="text-align: center;">PERMINTAAN DATA</h3>
     
-    <div class="field">
+    <div class="field" style="display: block;">
         <p style="margin: 10px 0; text-align: justify;">
-            Berdasarkan Surat Tugas Nomor : {{ sprintf('%03d', $suratTugas->id_surat) }}/AI/DIR-MSA/X/{{ date('Y') }}
+            Berdasarkan Surat Tugas Nomor : {{ sprintf('%03d', $suratTugas->id_surat) }}/AI/DIR-MSA/{{ strtoupper(\Carbon\Carbon::now()->translatedFormat('m')) }}/{{ date('Y') }}
             , bersama ini kami memohon untuk disiapkan data sebagai berikut :
         </p>
-
     </div>
+
     @if($suratTugas->deskripsi_permintaan)
-    <div class="deskripsi-box" >{{ $suratTugas->deskripsi_permintaan }}</div>
+    <div class="deskripsi-box">{{ $suratTugas->deskripsi_permintaan }}</div>
     @endif
     
     <p style="margin: 10px 0; text-align: justify;">
-       Demikian untuk disiapkan saat pemeriksaan
+        Demikian untuk disiapkan saat pemeriksaan
     </p>
-    
+
     <div class="ttd2">
-        <p>Yogyakarta, {{ \Carbon\Carbon::now()->format('d F Y') }}</p>
-        <p style="text-align:center;">Ketua Tim Audit Internal</p>
+        <p>Yogyakarta, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+        <p>Ketua Tim Audit Internal</p>
         <br>
         <br>
         <br>
-        <p style="text-decoration: underline; text-align:center;"><strong>Lilik Setia Darmawan</strong></p>
+        <p style="text-decoration: underline; "><strong>Lilik Setia Darmawan</strong></p>
     </div>
 
 </body>
 </html>
-
-

@@ -34,11 +34,11 @@ return new class extends Migration
                   ->onDelete('restrict')
                   ->onUpdate('cascade');
             
-            
+            $table->string('level_role');
             $table->string('judul_permintaan');
             $table->text('deskripsi');
-            $table->enum('divisi', ['Operasional', 'Marketing'])->default('Operasional');
-            $table->enum('jenis_permintaan', ['Rutin', 'Sekali'])->default('Rutin');
+            $table->enum('divisi')->default('Operasional');
+            $table->enum('jenis_permintaan');
             $table->enum('status_permintaan', ['Aktif', 'Berjalan', 'Selesai'])->default('Aktif');
 
             $table->timestamps();

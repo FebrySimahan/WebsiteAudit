@@ -51,15 +51,37 @@ const AuditorPermintaanData = () => {
     const [createLoading, setCreateLoading] = useState(false);
     const [formData, setFormData] = useState({
         id_surat: "",
-        id_auditee: "",
         judul_permintaan: "",
         deskripsi: "",
-        divisi: "Operasional",
-        jenis_permintaan: "Rutin",
+        divisi: "",
+        level_role: "",
+        jenis_permintaan: "",
         jadwal_audit: [""],
     });
 
-    const [auditees, setAuditees] = useState<any[]>([]);
+    const roleMapping: Record<string, { value: string; label: string }[]> = {
+        KTI: [{ value: 'KTI', label: 'KTI - Kepala TI' }],
+        Kepatuhan: [{ value: 'PE', label: 'PE - Pejabat Eksekutif' }],
+        MR: [{ value: 'PE', label: 'PE - Pejabat Eksekutif' }],
+        Lending: [
+            { value: 'KBL', label: 'KBL - Kabag Lending' },
+            { value: 'KSL', label: 'KSL - Kasie Lending' },
+            { value: 'TLU', label: 'TLU - Tim Leader UMKM' },
+            { value: 'KSR', label: 'KSR - Kasie Remedial' },
+        ],
+        Funding: [
+            { value: 'KBF', label: 'KBF - Kabag Funding' },
+            { value: 'KSF', label: 'KSF - Kasie Funding' },
+        ],
+        Operational: [
+            { value: 'KSO', label: 'KSO - Kasie Operasional' },
+            { value: 'KBO', label: 'KBO - Kabag Operasional' },
+            { value: 'KSA', label: 'KSA - Kasie Admin Kredit' },
+        ],
+    };
+
+    const availableLevelRoles = formData.divisi ? roleMapping[formData.divisi] : [];
+
     const [suratTugas, setSuratTugas] = useState<any[]>([]);
     const [loadingOptions, setLoadingOptions] = useState(false);
 
@@ -73,7 +95,7 @@ const AuditorPermintaanData = () => {
                 setPermintaanData(result.data);
                 setPagination(result.pagination);
             } else {
-                const result = await permintaanDataService.filterByStatusAuditor(filterStatus, currentPage, perPage);
+                const result = await permintaanDataService.filterByStatus(filterStatus, currentPage, perPage);
                 setPermintaanData(result.data);
                 setPagination(result.pagination);
             }
@@ -130,11 +152,7 @@ const AuditorPermintaanData = () => {
     const loadOptionsForModal = async () => {
         try {
             setLoadingOptions(true);
-            const [auditeesList, suratTugasList] = await Promise.all([
-                permintaanDataService.getAuditees(),
-                SuratTugasPemeriksaanService.getAllForTemuanPage(),
-            ]);
-            setAuditees(auditeesList);
+            const suratTugasList = await SuratTugasPemeriksaanService.getAllForTemuanPage();
             setSuratTugas(suratTugasList);
         } catch (err: any) {
             console.error("Error:", err);
@@ -154,7 +172,7 @@ const AuditorPermintaanData = () => {
             setCreateLoading(true);
             await permintaanDataService.createPermintaanData({
                 id_surat: parseInt(formData.id_surat),
-                id_auditee: parseInt(formData.id_auditee),
+                level_role: formData.level_role,
                 judul_permintaan: formData.judul_permintaan,
                 deskripsi: formData.deskripsi,
                 divisi: formData.divisi,
@@ -165,11 +183,11 @@ const AuditorPermintaanData = () => {
             setShowCreateModal(false);
             setFormData({
                 id_surat: "",
-                id_auditee: "",
                 judul_permintaan: "",
                 deskripsi: "",
-                divisi: "Operasional",
-                jenis_permintaan: "Rutin",
+                divisi: "",
+                level_role: "",
+                jenis_permintaan: "",
                 jadwal_audit: [""],
             });
             fetchPermintaanData();
@@ -245,9 +263,9 @@ const AuditorPermintaanData = () => {
         <AuditorLayout>
             <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <h1 className="text-3xl font-bold">Permintaan Data</h1>
+                    <h1 className="text-3xl font-bold">Ikhtisar Temuan</h1>
                     <Button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
-                        + Buat Permintaan Data
+                        + Buat Ikhtisar Temuan
                     </Button>
                 </div>
 
@@ -290,82 +308,82 @@ const AuditorPermintaanData = () => {
                     ))}
                 </div>
 
-
-                <div className="space-y-3">
-                    {permintaanData.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                            Tidak ada permintaan data
+                {loading ? (
+                    <div className="flex items-center justify-center py-12">
+                        <div className="text-center">
+                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-blue-600 mb-4"></div>
+                            <p className="text-slate-600">Memuat data...</p>
                         </div>
-                    ) : (
-                        permintaanData.map((item) => (
-                            <div
-                                key={item.id_permintaan}
-                                className="border rounded-lg p-4 hover:bg-gray-50 transition bg-white border-blue-500"
-                            >
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="font-semibold text-lg break-words text-gray-800">{item.judul_permintaan}</h3>
-                                        <p className="text-sm text-gray-600 mt-1 break-words">{item.deskripsi}</p>
-                                    </div>
-                                    <span className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ml-2 ${getStatusColor(item.status_permintaan)}`}>
-                                        {item.status_permintaan}
-                                    </span>
-                                </div>
-
-                                <div className="mb-3">
-                                    <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">
-                                        {item.divisi || "-"}
-                                    </span>
-                                </div>
-
-                                <div className="flex items-center justify-between pt-3 gap-2">
-                                    <div className="flex items-center gap-2">
-                                        <p>Auditee :</p>
-                                        <span className="px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
-                                            {item.auditee?.name || "-"}
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {permintaanData.length === 0 ? (
+                            <div className="text-center py-8 text-gray-500">
+                                Tidak ada permintaan data
+                            </div>
+                        ) : (
+                            permintaanData.map((item) => (
+                                <div
+                                    key={item.id_permintaan}
+                                    className="border rounded-lg p-4 hover:bg-gray-50 transition bg-white border-blue-500"
+                                >
+                                    <div className="flex items-start justify-between mb-3">
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold text-lg break-words text-gray-800">{item.judul_permintaan}</h3>
+                                            <p className="text-sm text-gray-600 mt-1 break-words">{item.deskripsi}</p>
+                                        </div>
+                                        <span className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ml-2 ${getStatusColor(item.status_permintaan)}`}>
+                                            {item.status_permintaan}
                                         </span>
                                     </div>
 
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handleSetSelesai(item.id_permintaan)}
-                                            disabled={item.status_permintaan === "Aktif" || item.status_permintaan === "Selesai"}
-                                            className={`flex items-center gap-1 px-3 py-2 rounded transition text-xs font-medium ${item.status_permintaan === "Selesai" || item.status_permintaan === "Aktif"
-                                                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                                : "bg-green-600 text-white hover:bg-green-700"
-                                                }`}
-                                        >
-                                            Selesaikan
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setSelectedItem(item);
-                                                if (item.jadwal_audits) {
-                                                    setSelectedJadwalIds(item.jadwal_audits.map(j => j.id_jadwal));
-                                                }
-                                                setShowPrintModal(true);
-                                            }}
-                                            className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-xs font-medium"
-                                        >
-                                            <Download size={16} />
-                                            Download
-                                        </button>
-                                        <button
-                                            onClick={() => handleShowDetail(item)}
-                                            className="flex items-center gap-1 px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition text-xs font-medium"
-                                        >
-                                            <Eye size={14} />
-                                            Detail
-                                        </button>
+                                    <div className="mb-3">
+                                        <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">
+                                            {item.divisi || "-"}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-end justify-end pt-3">
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => handleSetSelesai(item.id_permintaan)}
+                                                disabled={item.status_permintaan === "Aktif" || item.status_permintaan === "Selesai"}
+                                                className={`flex items-center gap-1 px-3 py-2 rounded transition text-xs font-medium ${item.status_permintaan === "Selesai" || item.status_permintaan === "Aktif"
+                                                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                                    : "bg-green-600 text-white hover:bg-green-700"
+                                                    }`}
+                                            >
+                                                Selesaikan
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedItem(item);
+                                                    if (item.jadwal_audits) {
+                                                        setSelectedJadwalIds(item.jadwal_audits.map(j => j.id_jadwal));
+                                                    }
+                                                    setShowPrintModal(true);
+                                                }}
+                                                className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-xs font-medium"
+                                            >
+                                                <Download size={16} />
+
+                                            </button>
+                                            <button
+                                                onClick={() => handleShowDetail(item)}
+                                                className="flex items-center gap-1 px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition text-xs font-medium"
+                                            >
+                                                <Eye size={14} />
+                                                Detail
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))
-                    )}
-                </div>
+                            ))
+                        )}
+                    </div>
+                )}
 
-
-                {pagination && pagination.last_page > 1 && !loading && (
+                {filterStatus === "all" && pagination && pagination.last_page > 1 && !loading && (
                     <div className="mt-6 flex flex-col items-center gap-2">
                         <Pagination>
                             <PaginationContent>
@@ -466,34 +484,17 @@ const AuditorPermintaanData = () => {
                                 <SelectContent>
                                     {suratTugas.map((st) => (
                                         <SelectItem key={st.id_surat} value={String(st.id_surat)}>
-                                            {st.unit_kerja} - {st.tujuan_audit}
+                                            {st.unit_kerja}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Auditee</label>
-                            <Select
-                                value={formData.id_auditee}
-                                onValueChange={(value) => setFormData({ ...formData, id_auditee: value })}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Pilih auditee" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {auditees.map((a) => (
-                                        <SelectItem key={a.id} value={String(a.id)}>
-                                            <p>{a.name} - ({a.level_role})</p>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+
 
                         <div>
-                            <label className="block text-sm font-medium mb-1">Judul Permintaan</label>
+                            <label className="block text-sm font-medium mb-1">Judul Ikthisar</label>
                             <Input
                                 value={formData.judul_permintaan}
                                 onChange={(e) => setFormData({ ...formData, judul_permintaan: e.target.value })}
@@ -516,14 +517,39 @@ const AuditorPermintaanData = () => {
                             <label className="block text-sm font-medium mb-1">Divisi</label>
                             <Select
                                 value={formData.divisi}
-                                onValueChange={(value) => setFormData({ ...formData, divisi: value })}
+                                onValueChange={(value) => setFormData({
+                                    ...formData,
+                                    divisi: value,
+                                    level_role: ""
+                                })}
                             >
                                 <SelectTrigger>
-                                    <SelectValue />
+                                    <SelectValue placeholder="Pilih divisi" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="Operasional">Operasional</SelectItem>
-                                    <SelectItem value="Marketing">Marketing</SelectItem>
+                                    {Object.keys(roleMapping).map((div) => (
+                                        <SelectItem key={div} value={div}>{div}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Level Role</label>
+                            <Select
+                                value={formData.level_role}
+                                onValueChange={(value) => setFormData({ ...formData, level_role: value })}
+                                disabled={!formData.divisi}
+                            >
+                                <SelectTrigger className={!formData.divisi ? "opacity-50 cursor-not-allowed" : ""}>
+                                    <SelectValue placeholder={!formData.divisi ? "Pilih divisi terlebih dahulu" : "Pilih level role"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {availableLevelRoles.map((role) => (
+                                        <SelectItem key={role.value} value={role.value}>
+                                            {role.label}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -535,11 +561,11 @@ const AuditorPermintaanData = () => {
                                 onValueChange={(value) => setFormData({ ...formData, jenis_permintaan: value })}
                             >
                                 <SelectTrigger>
-                                    <SelectValue />
+                                    <SelectValue placeholder="Pilih jenis permintaan" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="Rutin">Rutin</SelectItem>
-                                    <SelectItem value="Sekali">Sekali</SelectItem>
+                                    <SelectItem value="Harian">Harian</SelectItem>
+                                    <SelectItem value="Bulanan">Bulanan</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -639,12 +665,6 @@ const AuditorPermintaanData = () => {
                                     {selectedItem.status_permintaan}
                                 </span>
                             </div>
-                            {selectedItem.auditee && (
-                                <div>
-                                    <p className="text-sm text-gray-600">Auditee</p>
-                                    <p className="font-semibold">{selectedItem.auditee.name}</p>
-                                </div>
-                            )}
                             {selectedItem.jadwal_audits && selectedItem.jadwal_audits.length > 0 && (
                                 <div>
                                     <p className="text-sm text-gray-600 mb-2">Jadwal Audit</p>

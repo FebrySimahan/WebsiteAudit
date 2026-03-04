@@ -13,7 +13,7 @@ class TindakLanjut extends Model
         'id_respon',
         'id_auditee',
         'deskripsi_tindak_lanjut',
-        'tanggal_komitmen',
+        'deskripsi_komitmen',
         'status',
     ];
 

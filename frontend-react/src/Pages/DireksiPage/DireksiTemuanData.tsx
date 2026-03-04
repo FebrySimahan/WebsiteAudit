@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import DireksiLayout from "@/components/Layout/Direksi/Layout";
 import temuanDataService from "../../services/temuanService"
 import type { TemuanItem, TemuanPaginationInfo } from "../../services/temuanService";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { Eye } from "lucide-react";
 import ModalDetailTemuan from "@/components/Modals/ModalDetailTemuan";
 import {
@@ -35,11 +33,18 @@ const DireksiTemuanData = () => {
     }, [filterKeparahan, currentPage]);
 
     useEffect(() => {
+        // Reset search when filter changes
+        setSearchQuery("");
+    }, [filterKeparahan]);
+
+    useEffect(() => {
         const debounceTimer = setTimeout(() => {
             if (searchQuery.trim()) {
-                handleSearch(searchQuery);
-            } else {
                 setCurrentPage(1);
+                handleSearch(searchQuery);
+            } else if (currentPage !== 1) {
+                setCurrentPage(1);
+            } else {
                 fetchData();
             }
         }, 500);
@@ -77,8 +82,9 @@ const DireksiTemuanData = () => {
         try {
             setLoading(true);
             setError("");
-            const result = await temuanDataService.searchByJudul(query);
-            setTemuanData(result);
+            const result = await temuanDataService.searchByJudulPaginated(query, currentPage, perPage);
+            setTemuanData(result.data);
+            setPagination(result.pagination);
         } catch (err: any) {
             setError(err.response?.data?.message || "Gagal mencari data");
             console.error("Error:", err);
@@ -88,13 +94,13 @@ const DireksiTemuanData = () => {
     };
 
 
-    const getSeverityColor = (tingkat: string) => {
-        switch (tingkat?.toLowerCase()) {
-            case "rendah":
+    const getKeparahanColor = (keparahan: string) => {
+        switch (keparahan) {
+            case "Rendah":
                 return "bg-blue-100 text-blue-800";
-            case "sedang":
+            case "Sedang":
                 return "bg-yellow-100 text-yellow-800";
-            case "tinggi":
+            case "Tinggi":
                 return "bg-red-100 text-red-800";
             default:
                 return "bg-gray-100 text-gray-800";
@@ -102,15 +108,15 @@ const DireksiTemuanData = () => {
     };
 
     const getStatusColor = (status: string) => {
-        switch (status?.toLowerCase()) {
-            case "terbuka":
-                return "bg-orange-100 text-orange-800";
-            case "menunggu tindaklanjut":
+        switch (status) {
+            case "Selesai":
+                return "bg-green-100 text-white-800";
+            case "Menunggu Tindaklanjut":
+                return "bg-cyan-100 text-cyan-800";
+            case "Menunggu Verifikasi":
                 return "bg-purple-100 text-purple-800";
-            case "menunggu verifikasi":
-                return "bg-blue-100 text-blue-800";
-            case "selesai":
-                return "bg-green-100 text-green-800";
+            case "Terbuka":
+                return "bg-yellow-100 text-yellow-800";
             default:
                 return "bg-gray-100 text-gray-800";
         }
@@ -163,77 +169,61 @@ const DireksiTemuanData = () => {
             )}
 
             {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
-                    {[1, 2, 3].map((i) => (
-                        <Skeleton key={i} className="h-64 rounded-lg" />
-                    ))}
-                </div>
-            ) : temuanData.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                    <p className="text-lg">Tidak ada data temuan</p>
+                <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-blue-600 mb-4"></div>
+                        <p className="text-slate-600">Memuat data...</p>
+                    </div>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-1 gap-4">
-                    {temuanData.map((temuan) => (
-                        <div
-                            key={temuan.id_temuan}
-                            className="bg-white rounded-lg shadow-sm border border-blue-500 p-6   transition-shadow cursor-pointer"
-                            onClick={() => {
-                                setSelectedTemuan(temuan);
-                                setShowModal(true);
-                            }}
-                        >
-                            <div className="flex justify-between items-start mb-3">
-                                <div className="flex-1">
-                                    <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
-                                        {temuan.judul_temuan}
-                                    </h3>
-                                </div>
-                            </div>
-
-                            <p className="text-sm text-gray-600 line-clamp-2 mb-4">
-                                {temuan.kondisi_sebenarnya}
-                            </p>
-
-                            <div className="flex gap-2 flex-wrap mb-4">
-                                <Badge className={`${getSeverityColor(temuan.tingkat_keparahan)} pointer-events-none`}>
-                                    {temuan.tingkat_keparahan}
-                                </Badge>
-                                <Badge className={`${getStatusColor(temuan.status_temuan)} pointer-events-none`}>
-                                    {temuan.status_temuan}
-                                </Badge>
-                            </div>
-
-                            <div className="flex justify-between items-center text-sm text-gray-500">
-                                <span>
-                                    {new Date(temuan.tanggal_temuan).toLocaleDateString("id-ID")}
-                                </span>
-                                <div className="flex gap-2">
-                                    {/* <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDownloadPdf(temuan.id_temuan);
-                                        }}
-                                        title="Download PDF"
-                                        className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-xs font-medium"
-                                    >
-                                        <Download size={14} />
-                                        Download
-                                    </button> */}
-                                    <button
-                                        onClick={() => {
-                                            setSelectedTemuan(temuan);
-                                            setShowModal(true);
-                                        }}
-                                        className="flex items-center gap-1 px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition text-xs font-medium"
-                                    >
-                                        <Eye size={14} />
-                                        Detail
-                                    </button>
-                                </div>
-                            </div>
+                <div className="space-y-3">
+                    {temuanData.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                            Tidak ada data temuan
                         </div>
-                    ))}
+                    ) : (
+                        temuanData.map((item, index) => (
+                            <div
+                                key={`temuan-${item.id_temuan}-${index}`}
+                                className="bg-white rounded-lg p-5 border border-blue-500 transition"
+                            >
+                                <div className="flex items-start justify-between mb-3">
+                                    <h3 className="text-lg font-semibold text-gray-800 flex-1 pr-2">
+                                        {item.permintaanData?.divisi} - {item.judul_temuan}
+                                    </h3>
+                                    <span className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ${getStatusColor(item.status_temuan)}`}>
+                                        {item.status_temuan}
+                                    </span>
+                                </div>
+
+                                <p className="text-sm text-gray-600 mb-3">{item.kondisi_sebenarnya}</p>
+
+                                <div className="flex items-center justify-between gap-2 mb-3">
+                                    <div className="flex gap-2 flex-wrap items-center">
+                                        <span className={`text-xs px-2 py-1 rounded ${getKeparahanColor(item.tingkat_keparahan)}`}>
+                                            {item.tingkat_keparahan}
+                                        </span>
+                                        <span className="text-xs text-gray-500">
+                                            {new Date(item.tanggal_temuan).toLocaleDateString("id-ID")}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => {
+                                                setSelectedTemuan(item);
+                                                setShowModal(true);
+                                            }}
+                                            className="flex items-center gap-1 px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition text-xs font-medium whitespace-nowrap"
+                                        >
+                                            <Eye size={12} />
+                                            Detail
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             )}
 
@@ -324,7 +314,7 @@ const DireksiTemuanData = () => {
                 isOpen={showModal}
                 onOpenChange={setShowModal}
                 temuan={selectedTemuan}
-                getSeverityColor={getSeverityColor}
+                getSeverityColor={getKeparahanColor}
                 getStatusColor={getStatusColor}
             />
         </DireksiLayout>

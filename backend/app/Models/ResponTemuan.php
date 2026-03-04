@@ -13,7 +13,6 @@ class ResponTemuan extends Model
         'id_temuan',
         'id_auditee',
         'status_respon',
-        'alasan_penolakan',
         'tanggal_respon',
     ];
 

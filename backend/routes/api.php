@@ -22,10 +22,12 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::prefix('temuan')->group(function () {
         Route::get('/', [TemuanController::class, 'index']);                   
+        Route::get('/verif', [TemuanController::class, 'indexByVerif']);                   
         Route::get('/search', [TemuanController::class, 'searchByJudul']);
         Route::get('/filter-keparahan', [TemuanController::class, 'filterByKeparahan']);
         Route::get('/filter-status', [TemuanController::class, 'filterByStatus']);
         Route::get('/show-auditee-role', [TemuanController::class, 'showByAuditeeRole']);
+        Route::get('/show-by-id-auditee', [TemuanController::class, 'showByIdAuditee']);
         Route::post('/create-temuan', [TemuanController::class, 'createTemuan']);           
         Route::get('/{id}/pdf', [PdfController::class, 'generateTemuan']);
         Route::get('/count-by-status', [TemuanController::class, 'countByStatus']);
@@ -54,14 +56,20 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('verifikasi')->group(function () {   
         Route::post('/create', [VerifikasiController::class, 'createVerifikasi']);
+        Route::post('/{id}/update', [VerifikasiController::class, 'updateVerifikasi']);
     });
 
     Route::prefix('permintaan-data')->group(function () {
+        Route::get('/show-all-paginated', [PermintaanDataController::class, 'index']);         
+        Route::get('/show-all-dropdown', [PermintaanDataController::class, 'indexDropdown']);         
+        
+        
+        
         // punya auditor 
         Route::get('/auditor', [PermintaanDataController::class, 'index']);
         Route::get('/auditor-temuan', [PermintaanDataController::class, 'indexByAuditorTemuan']);
         Route::get('/auditor/search', [PermintaanDataController::class, 'searchByJudulAuditor']);
-        Route::get('/auditor/filter-status', [PermintaanDataController::class, 'filterByStatusAuditor']);
+        Route::get('/auditor/filter-status', [PermintaanDataController::class, 'filterByStatus']);
         Route::get('/auditor/{id}/pdf-preview', [PdfController::class, 'previewPermintaanDataAuditor']);
         Route::get('/auditor/{id}/pdf', [PdfController::class, 'generatePermintaanData']);
         Route::post('/auditor/create', [PermintaanDataController::class, 'createPermintaanData']);
@@ -69,7 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
         // punya direksi
-        Route::get('/direksi', [PermintaanDataController::class, 'index']);         
+        Route::get('/direksi/filter-status', [PermintaanDataController::class, 'filterByStatus']);
         Route::get('/search', [PermintaanDataController::class, 'searchByJudul']);          
         Route::get('/status-aktif', [PermintaanDataController::class, 'statusAktif']);
         Route::get('/status-berjalan', [PermintaanDataController::class, 'statusBerjalan']);

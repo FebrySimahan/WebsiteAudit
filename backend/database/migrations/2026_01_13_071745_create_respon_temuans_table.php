@@ -16,7 +16,6 @@ return new class extends Migration
             $table->unsignedBigInteger('id_temuan');
             $table->unsignedBigInteger('id_auditee');
             $table->enum('status_respon', ['Diterima', 'Ditolak']);
-            $table->text('alasan_penolakan');
             $table->date('tanggal_respon');
             $table->timestamps();
 

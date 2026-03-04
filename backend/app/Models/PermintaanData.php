@@ -20,6 +20,7 @@ class PermintaanData extends Model
         'divisi',
         'jenis_permintaan',
         'status_permintaan',
+        'level_role',
     ];
 
     protected $casts = [

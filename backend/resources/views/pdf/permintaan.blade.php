@@ -65,12 +65,13 @@
     <tr>
         <td><img src="{{ public_path('/msa.png') }}" alt="" style="max-width: 100px;"></td>
         <td><h4>IKHTISAR TEMUAN DAN REKOMENDASI HASIL AUDIT</h4></td>
-        <td> Nomor : {{ sprintf('%03d', $permintaan->surat->id_surat ?? 0) }}/AI/DIR-MSA/X/{{ date('Y') }}</td>
+        <td> Nomor : {{ sprintf('%03d', $permintaan->surat->id_surat ?? 0) }}/AI/DIR-MSA/{{ strtoupper(\Carbon\Carbon::now()->translatedFormat('m')) }}/{{ date('Y') }}</td>
+    
       
     </tr>
     <tr>
         <td>Unit Kerja</td>
-        <td colspan="2">{{ $permintaan->divisi ?? '-' }}</td>
+        <td colspan="2">{{ $permintaan->divisi ?? '-' }} / {{ $permintaan->level_role ?? '-' }}</td>
     </tr>
     <tr>
         <td>Fokus Audit</td>
@@ -115,8 +116,8 @@
                 <th>Dampak</th>
                 <th>Penyebab</th>
                 <th>Rekomendasi Tindak Lanjut</th>
-                <th>Tanggapan Auditee (tindak lanjut)</th>
-                <th>Komitmen Auditee (catatan verifikasi)</th>
+                <th>Tanggapan Auditee </th>
+                <th>Komitmen Auditee </th>
             </tr>
            @foreach($permintaan->temuans as $index => $temuan)
                 @php
@@ -126,16 +127,37 @@
                 @endphp
                 <tr>
                     <td>{{ $index + 1 }}</td>
-                    <td>{{ $temuan->kondisi_sebenarnya ?? '-' }}</td>
+                    <td>{{ $temuan->kondisi_sebenarnya ??  '-' }}</td>
                     <td>{{ $temuan->keadaan_seharusnya ?? '-' }}</td>
                     <td>{{ $temuan->dampak ?? '-' }}</td>
                     <td>{{ $temuan->penyebab ?? '-' }}</td>
                     <td>{{ $temuan->rekomendasi ?? '-' }}</td>
                     <td>{{ $tindaklanjut->deskripsi_tindak_lanjut ?? '-' }}</td>
-                    <td>{{ $verifikasi->catatan ?? '-' }}</td>
+                    <td>{{ $tindaklanjut->deskripsi_komitmen ?? '-' }}</td>
                 </tr>
             @endforeach
         </table>
     @endif
+
+    <div style="margin-top: 40px; margin-left: auto; width: 50%;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="height: 50px; border: 1px solid #ddd; padding: 5px;"></td>
+                <td style="height: 50px; border: 1px solid #ddd; padding: 5px;"></td>
+            </tr>
+            <tr>
+                <td style="height: 20px; border: 1px solid #ddd; padding: 5px;">Auditee</td>
+                <td style="height: 20px; border: 1px solid #ddd; padding: 5px;">Auditor</td>
+            </tr>
+            <tr>
+                <td style="height: 50px; border: 1px solid #ddd; padding: 5px;"></td>
+                <td style="height: 50px; border: 1px solid #ddd; padding: 5px;"></td>
+            </tr>
+            <tr>
+                <td style="height: 20px; border: 1px solid #ddd; padding: 5px;">Auditee</td>
+                <td style="height: 20px; border: 1px solid #ddd; padding: 5px;">Auditor</td>
+            </tr>
+        </table>
+    </div>
 </body>
 </html>

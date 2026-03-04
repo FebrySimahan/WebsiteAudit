@@ -37,11 +37,18 @@ const DireksiPermintaanData = () => {
   }, [filterStatus, currentPage]);
 
   useEffect(() => {
+    // Reset search when filter status changes
+    setSearchQuery("");
+  }, [filterStatus]);
+
+  useEffect(() => {
     const debounceTimer = setTimeout(() => {
       if (searchQuery.trim()) {
-        handleSearch(searchQuery);
-      } else {
         setCurrentPage(1);
+        handleSearch(searchQuery);
+      } else if (currentPage !== 1) {
+        setCurrentPage(1);
+      } else {
         fetchData();
       }
     }, 500);
@@ -59,13 +66,9 @@ const DireksiPermintaanData = () => {
         setData(result.data);
         setPagination(result.pagination);
       } else {
-        const result = filterStatus === "aktif"
-          ? await permintaanDataService.getStatusAktif()
-          : filterStatus === "berjalan"
-            ? await permintaanDataService.getStatusBerjalan()
-            : await permintaanDataService.getStatusSelesai();
-        setData(result);
-        setPagination(null);
+        const result = await permintaanDataService.filterByStatusDireksi(filterStatus, currentPage, perPage);
+        setData(result.data);
+        setPagination(result.pagination);
       }
     } catch (err: any) {
       setError(err.response?.data?.message || "Gagal memuat data");
@@ -79,8 +82,10 @@ const DireksiPermintaanData = () => {
     try {
       setLoading(true);
       setError("");
-      const result = await permintaanDataService.searchByJudul(query);
-      setData(result);
+      // Use pagination for search results too
+      const result = await permintaanDataService.searchByJudulPaginated(query, currentPage, perPage);
+      setData(result.data);
+      setPagination(result.pagination);
     } catch (err: any) {
       setError(err.response?.data?.message || "Gagal mencari data");
       console.error("Error:", err);
@@ -141,11 +146,11 @@ const DireksiPermintaanData = () => {
     <DireksiLayout>
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-4">
-          Daftar Permintaan Data
+          Daftar Ikthisar Temuan
         </h1>
         <input
           type="text"
-          placeholder="Cari berdasarkan judul permintaan..."
+          placeholder="Cari berdasarkan judul ikhtisar..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -222,13 +227,7 @@ const DireksiPermintaanData = () => {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between pt-3 gap-2">
-                  <div className="flex items-center gap-2">
-                    <p>Auditee :</p>
-                    <span className="px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
-                      {item.auditee?.level_role || "-"}
-                    </span>
-                  </div>
+                <div className="flex items-center justify-end pt-3 gap-2">
 
                   <div className="flex gap-2">
                     <button
@@ -236,8 +235,8 @@ const DireksiPermintaanData = () => {
                       title="Download PDF"
                       className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-xs font-medium"
                     >
-                      <Download size={9} />
-                      Download
+                      <Download size={16} />
+
                     </button>
                     <button
                       onClick={() => {
@@ -257,7 +256,6 @@ const DireksiPermintaanData = () => {
         </div>
       )}
 
-      {/* Pagination */}
       {pagination && pagination.last_page > 1 && !loading && (
         <div className="mt-6 flex flex-col items-center gap-2">
           <Pagination>
@@ -341,6 +339,7 @@ const DireksiPermintaanData = () => {
 
         </div>
       )}
+
 
       <ModalDetailPermintaan
         isOpen={showModal}

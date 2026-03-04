@@ -1,5 +1,19 @@
 import api from "./api";
 
+export interface PermintaanDataItem {
+    id_permintaan: number;
+    divisi: string;
+    level_role?: string;
+    [key: string]: any;
+}
+
+export interface UserItem {
+    id: number;
+    name: string;
+    level_role?: string;
+    [key: string]: any;
+}
+
 export interface TemuanItem {
     id_temuan: number;
     id_auditee: number;
@@ -13,8 +27,13 @@ export interface TemuanItem {
     rekomendasi: string;
     tingkat_keparahan: string;
     status_temuan: string;
+    level_role?: string;
+    permintaanData?: PermintaanDataItem;
+    auditor?: UserItem;
+    auditee?: UserItem;
     responTemuans?: ResponTemuan[];
     verifikasi?: {
+        id_verifikasi: number;
         status_verifikasi: string;
         catatan: string;
         tanggal_verifikasi: string;
@@ -26,7 +45,6 @@ export interface ResponTemuan {
     id_temuan: number;
     id_auditee: number;
     status_respon: string;
-    alasan_penolakan?: string;
     tanggal_respon: string;
 }
 
@@ -54,6 +72,15 @@ const temuanService = {
     getAll: async (): Promise<TemuanItem[]> => {
         try {
             const res = await api.get<TemuanResponse>("/temuan/");
+            return Array.isArray(res.data.data) ? res.data.data : [res.data.data];
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getAllVerif: async (): Promise<TemuanItem[]> => {
+        try {
+            const res = await api.get<TemuanResponse>("/temuan/verif");
             return Array.isArray(res.data.data) ? res.data.data : [res.data.data];
         } catch (error) {
             throw error;
@@ -93,6 +120,21 @@ const temuanService = {
         }
     },
 
+    searchByJudulPaginated: async (judul: string, page: number = 1, perPage: number = 5): Promise<TemuanPaginatedResponse> => {
+        try {
+            const res = await api.get<TemuanPaginatedResponse>("/temuan/search", {
+                params: { judul, page, per_page: perPage }
+            });
+            return {
+                success: res.data.success,
+                data: res.data.data,
+                pagination: res.data.pagination,
+            };
+        } catch (error) {
+            throw error;
+        }
+    },
+
     filterByKeparahan: async (keparahan: string, page: number = 1, perPage: number = 5): Promise<TemuanPaginatedResponse> => {
         try {
             const res = await api.get<TemuanPaginatedResponse>("/temuan/filter-keparahan", {
@@ -110,7 +152,7 @@ const temuanService = {
 
     filterByStatus: async (status: string, page: number = 1, perPage: number = 5): Promise<TemuanPaginatedResponse> => {
         try {
-            const res = await api.get<TemuanPaginatedResponse>("/temuan/filter-status", {
+            const res = await api.get<TemuanPaginatedResponse>("/temuan", {
                 params: { status, page, per_page: perPage }
             });
             return {
@@ -123,10 +165,26 @@ const temuanService = {
         }
     },
 
-    showByAuditeeRole: async (page: number = 1, perPage: number = 5): Promise<TemuanPaginatedResponse> => {
+    showByAuditeeRole: async (page: number = 1, perPage: number = 5, status: string = "all"): Promise<TemuanPaginatedResponse> => {
         try {
             const res = await api.get<TemuanPaginatedResponse>("/temuan/show-auditee-role", {
-                params: { page, per_page: perPage }
+                params: { page, per_page: perPage, status }
+            });
+            return {
+                success: res.data.success,
+                data: res.data.data,
+                pagination: res.data.pagination,
+            };
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    showByIdAuditee: async (_idAuditee: number, page: number = 1, perPage: number = 5, status: string = "all"): Promise<TemuanPaginatedResponse> => {
+        try {
+            // idAuditee parameter is ignored - backend uses authenticated user's ID for security
+            const res = await api.get<TemuanPaginatedResponse>("/temuan/show-by-id-auditee", {
+                params: { page, per_page: perPage, status }
             });
             return {
                 success: res.data.success,
@@ -142,14 +200,12 @@ const temuanService = {
         id_temuan: number;
         id_auditee: number;
         status_respon: "Diterima" | "Ditolak";
-        alasan_penolakan?: string | null;
     }) => {
         try {
             const res = await api.post("/respon-temuans/create", {
                 id_temuan: data.id_temuan,
                 id_auditee: data.id_auditee,
                 status_respon: data.status_respon,
-                alasan_penolakan: data.alasan_penolakan || null,
                 tanggal_respon: new Date().toISOString().split('T')[0],
             });
             return res.data;
@@ -161,13 +217,13 @@ const temuanService = {
     createTindakLanjut: async (data: {
         id_temuan: number;
         deskripsi_tindak_lanjut: string;
-        tanggal_komitmen: string;
+        deskripsi_komitmen: string;
     }) => {
         try {
             const res = await api.post("/tindak-lanjut/createTindakLanjut", {
                 id_temuan: data.id_temuan,
                 deskripsi_tindak_lanjut: data.deskripsi_tindak_lanjut,
-                tanggal_komitmen: data.tanggal_komitmen,
+                deskripsi_komitmen: data.deskripsi_komitmen,
                 status: "Proses",
             });
             return res.data;
@@ -204,6 +260,18 @@ const temuanService = {
             throw error;
         }
     },
+
+    updateVerifikasi: async (idVerifikasi: number, data: {
+        catatan?: string | null;
+    }) => {
+        try {
+            const res = await api.post(`/verifikasi/${idVerifikasi}/update`, data);
+            return res.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
 
     createVerifikasi: async (data: {
         id_tindak_lanjut: number;

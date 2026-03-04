@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import AuditeeLayout from "@/components/Layout/Auditee/AuditeeLayout";
 import temuanDataService from "@/services/temuanService";
 import type { TemuanItem, TemuanPaginationInfo } from "@/services/temuanService";
@@ -18,6 +19,19 @@ import {
 } from "@/components/ui/pagination";
 
 const AuditeeTemuan = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+    
+    // Get filter from URL search params or default to "all"
+    const getInitialFilter = () => {
+        const params = new URLSearchParams(location.search);
+        const urlFilter = params.get("filter");
+        if (urlFilter && ["all", "Terbuka", "Menunggu Tindaklanjut", "Menunggu Verifikasi", "Selesai"].includes(urlFilter)) {
+            return urlFilter as "all" | "Terbuka" | "Menunggu Tindaklanjut" | "Menunggu Verifikasi" | "Selesai";
+        }
+        return "all";
+    };
+    
     const [temuanData, setTemuanData] = useState<TemuanItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -27,11 +41,11 @@ const AuditeeTemuan = () => {
     const [selectedTemuan, setSelectedTemuan] = useState<TemuanItem | null>(null);
     const [alasanPenolakan, setAlasanPenolakan] = useState("");
     const [respondingLoading, setRespondingLoading] = useState(false);
-    const [filterStatus, setFilterStatus] = useState<string>("Semua");
+    const [filterStatus, setFilterStatus] = useState<"all" | "Terbuka" | "Menunggu Tindaklanjut" | "Menunggu Verifikasi" | "Selesai">(getInitialFilter());
     const [searchQuery, setSearchQuery] = useState("");
     const [showTindakLanjutModal, setShowTindakLanjutModal] = useState(false);
     const [deskripsiTindakLanjut, setDeskripsiTindakLanjut] = useState("");
-    const [tanggalKomitmen, setTanggalKomitmen] = useState("");
+    const [deskripsiKomitmen, setDeskripsiKomitmen] = useState("");
     const [tindakLanjutLoading, setTindakLanjutLoading] = useState(false);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [detailTemuan, setDetailTemuan] = useState<TemuanItem | null>(null);
@@ -40,45 +54,67 @@ const AuditeeTemuan = () => {
     const perPage = 5;
 
     useEffect(() => {
-        if (filterStatus === "Semua") {
+        // Check if filterStatus is passed from navigation state (backward compatibility)
+        if (location.state && location.state.filterStatus) {
+            setFilterStatus(location.state.filterStatus);
             setCurrentPage(1);
-            fetchTemuanByRole();
-        } else {
-            setCurrentPage(1);
-            fetchTemuanByStatus(filterStatus, 1);
+            // Update URL to reflect the new filter
+            navigate("?filter=" + encodeURIComponent(location.state.filterStatus), { replace: true });
         }
-    }, [filterStatus]);
+    }, [location.state, navigate]);
+
+    // Update URL when filterStatus changes
+    useEffect(() => {
+        navigate("?filter=" + encodeURIComponent(filterStatus), { replace: true });
+    }, [filterStatus, navigate]);
+
+    useEffect(() => {
+        fetchTemuan();
+    }, [filterStatus, currentPage]);
 
     useEffect(() => {
         const debounceTimer = setTimeout(() => {
             if (searchQuery.trim()) {
                 handleSearch(searchQuery.trim());
             } else {
-                if (filterStatus === "Semua") {
-                    fetchTemuanByRole();
-                } else {
-                    fetchTemuanByStatus(filterStatus, currentPage);
-                }
+                setCurrentPage(1);
+                fetchTemuan();
             }
         }, 500);
-
         return () => clearTimeout(debounceTimer);
-    }, [searchQuery, filterStatus, currentPage]);
+    }, [searchQuery]);
 
     const handleSearch = async (query: string) => {
         try {
             setLoading(true);
             setError("");
-            const result = await temuanDataService.showByAuditeeRole(currentPage, perPage);
-            let filtered = result.data;
 
+            // Get userId directly dari sessionStorage, jangan andalkan state
+            const userStr = sessionStorage.getItem("cached_user");
+            let currentUserId: number | null = null;
+
+            if (userStr) {
+                const userData = JSON.parse(userStr);
+                currentUserId = userData.data?.id;
+            }
+
+            const peMapping: { [key: number]: string } = {
+                44: 'Kepatuhan',
+                27: 'MR',
+            };
+
+            let result;
+            if (currentUserId && peMapping[currentUserId]) {
+                result = await temuanDataService.showByIdAuditee(currentUserId, currentPage, perPage, filterStatus);
+            } else {
+                result = await temuanDataService.showByAuditeeRole(currentPage, perPage, filterStatus);
+            }
+
+            let filtered = result.data;
             if (query) {
                 filtered = filtered.filter((item: TemuanItem) =>
                     item.judul_temuan.toLowerCase().includes(query.toLowerCase())
                 );
-            }
-            if (filterStatus !== "Semua") {
-                filtered = filtered.filter((item: TemuanItem) => item.status_temuan === filterStatus);
             }
             setTemuanData(filtered);
             setPagination(result.pagination);
@@ -89,11 +125,13 @@ const AuditeeTemuan = () => {
         }
     };
 
-    const fetchTemuanByRole = async () => {
+    const fetchTemuan = async () => {
         try {
             setLoading(true);
             setError("");
+
             const userStr = sessionStorage.getItem("cached_user");
+            let currentUserId: number | null = null;
 
             if (userStr) {
                 const userData = JSON.parse(userStr);
@@ -101,27 +139,23 @@ const AuditeeTemuan = () => {
                 const id = userData.data?.id;
                 setUserRole(role);
                 setUserId(id);
-                const result = await temuanDataService.showByAuditeeRole(currentPage, perPage);
-                setTemuanData(result.data);
-                setPagination(result.pagination);
+                currentUserId = id; // Gunakan nilai langsung, bukan state
             }
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Gagal memuat data temuan");
-            console.error("Error:", err);
-        } finally {
-            setLoading(false);
-        }
-    };
 
-    const fetchTemuanByStatus = async (status: string, page: number = 1) => {
-        try {
-            setLoading(true);
-            setError("");
-            // Ambil data temuan auditee sesuai role
-            const result = await temuanDataService.showByAuditeeRole(page, perPage);
-            // Filter status
-            const filtered = result.data.filter((item: TemuanItem) => item.status_temuan === status);
-            setTemuanData(filtered);
+            // untuk PE users, gunakan showByIdAuditee; untuk non-PE gunakan showByAuditeeRole
+            const peMapping: { [key: number]: string } = {
+                44: 'Kepatuhan',
+                27: 'MR',
+            };
+
+            let result;
+            if (currentUserId && peMapping[currentUserId]) {
+                result = await temuanDataService.showByIdAuditee(currentUserId, currentPage, perPage, filterStatus);
+            } else {
+                result = await temuanDataService.showByAuditeeRole(currentPage, perPage, filterStatus);
+            }
+
+            setTemuanData(result.data);
             setPagination(result.pagination);
         } catch (err: any) {
             setError(err.response?.data?.message || "Gagal memuat data temuan");
@@ -160,12 +194,10 @@ const AuditeeTemuan = () => {
     };
 
     const getFilteredTemuan = () => {
-        if (filterStatus === "Semua") {
+        if (filterStatus === "all") {
             return temuanData;
         }
-        return temuanData.filter(
-            (temuan) => temuan.status_temuan === filterStatus
-        );
+        return temuanData.filter((item) => item.status_temuan === filterStatus);
     };
 
     const hasRejectedVerifikasi = (temuan: TemuanItem) => {
@@ -181,10 +213,9 @@ const AuditeeTemuan = () => {
                 id_temuan: selectedTemuan.id_temuan,
                 id_auditee: userId,
                 status_respon: status,
-                alasan_penolakan: status === "Ditolak" ? alasanPenolakan : null,
             });
 
-            await fetchTemuanByRole();
+            await fetchTemuan();
             setShowResponModal(false);
             setSelectedTemuan(null);
             setAlasanPenolakan("");
@@ -197,21 +228,21 @@ const AuditeeTemuan = () => {
     };
 
     const handleTindakLanjut = async () => {
-        if (!selectedTemuan || !deskripsiTindakLanjut.trim() || !tanggalKomitmen) return;
+        if (!selectedTemuan || !deskripsiTindakLanjut.trim() || !deskripsiKomitmen) return;
 
         try {
             setTindakLanjutLoading(true);
             await temuanDataService.createTindakLanjut({
                 id_temuan: selectedTemuan.id_temuan,
                 deskripsi_tindak_lanjut: deskripsiTindakLanjut,
-                tanggal_komitmen: tanggalKomitmen,
+                deskripsi_komitmen: deskripsiKomitmen,
             });
 
-            await fetchTemuanByRole();
+            await fetchTemuan();
             setShowTindakLanjutModal(false);
             setSelectedTemuan(null);
             setDeskripsiTindakLanjut("");
-            setTanggalKomitmen("");
+            setDeskripsiKomitmen("");
         } catch (err: any) {
             setError(err.response?.data?.message || "Gagal membuat tindak lanjut");
             console.error("Error:", err);
@@ -247,19 +278,24 @@ const AuditeeTemuan = () => {
                     </div>
                 )}
 
-                <div className="flex gap-2 flex-wrap">
-                    {["Semua", "Terbuka", "Menunggu Tindaklanjut", "Menunggu Verifikasi", "Selesai"].map((status) => (
+                <div className="flex gap-3 mb-6 flex-wrap">
+                    {[
+                        { value: "all" as const, label: "Semua", activeBg: "bg-blue-600", inactiveBg: "bg-gray-200" },
+                        { value: "Terbuka" as const, label: "Terbuka", activeBg: "bg-yellow-600", inactiveBg: "bg-gray-200" },
+                        { value: "Menunggu Tindaklanjut" as const, label: "Menunggu Tindaklanjut", activeBg: "bg-cyan-600", inactiveBg: "bg-gray-200" },
+                        { value: "Menunggu Verifikasi" as const, label: "Menunggu Verifikasi", activeBg: "bg-purple-600", inactiveBg: "bg-gray-200" },
+                        { value: "Selesai" as const, label: "Selesai", activeBg: "bg-green-600", inactiveBg: "bg-gray-200" },
+                    ].map(({ value, label, activeBg, inactiveBg }) => (
                         <button
-                            key={status}
+                            key={value}
                             onClick={() => {
-                                setFilterStatus(status);
+                                setFilterStatus(value);
+                                setCurrentPage(1);
                             }}
-                            className={`px-4 py-2 rounded-lg font-semibold text-sm transition ${filterStatus === status
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            className={`px-4 py-2 rounded-lg font-semibold transition ${filterStatus === value ? `${activeBg} text-white` : `${inactiveBg} text-gray-700`
                                 }`}
                         >
-                            {status}
+                            {label}
                         </button>
                     ))}
                 </div>
@@ -281,12 +317,14 @@ const AuditeeTemuan = () => {
                                 return (
                                     <div
                                         key={`temuan-${temuan.id_temuan}-${index}`}
-                                        className="bg-white rounded-lg shadow-md hover:shadow-lg transition p-5 border border-gray-200"
+                                        className="bg-white rounded-lg shadow-md  transition p-5 border border-gray-200"
                                     >
                                         <div className="flex items-start justify-between mb-3">
-                                            <h3 className="text-lg font-semibold text-gray-800 flex-1 pr-2">
-                                                {temuan.judul_temuan || "Temuan"}
-                                            </h3>
+                                            <div className="flex-1 pr-2">
+                                                <h3 className="text-lg font-semibold text-gray-800">
+                                                    {temuan.judul_temuan || "Temuan"}
+                                                </h3>
+                                            </div>
                                             <span className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ${getStatusColor(temuan.status_temuan)}`}>
                                                 {temuan.status_temuan}
                                             </span>
@@ -302,14 +340,7 @@ const AuditeeTemuan = () => {
                                             {new Date(temuan.tanggal_temuan).toLocaleDateString("id-ID")}
                                         </div>
 
-                                        {temuan.responTemuans && temuan.responTemuans.length > 0 && temuan.responTemuans.some((r: any) => r.status_respon === 'Ditolak') && (
-                                            <div className="bg-red-50 border border-red-200 rounded p-3 mb-3">
-                                                <div className="text-xs text-red-700 leading-relaxed">
-                                                    <span className="font-medium">Ditolak Dengan Alasan : </span>
-                                                    <p>{temuan.responTemuans.find((r: any) => r.status_respon === 'Ditolak')?.alasan_penolakan || "Tidak ada alasan penolakan"}</p>
-                                                </div>
-                                            </div>
-                                        )}
+
 
                                         {temuan.status_temuan === "Menunggu Tindaklanjut" && hasRejectedVerifikasi(temuan) && (
                                             <div className="bg-red-50 border border-red-200 rounded p-3 mb-3">
@@ -317,7 +348,6 @@ const AuditeeTemuan = () => {
                                                     <span className="font-medium">Catatan Penolakan:</span>
                                                     <p className="text-red-700">{temuan.verifikasi?.catatan}</p>
                                                 </div>
-                                                {/* <p className="font-semibold text-red-800 mb-1">Catatan Penolakan:</p> */}
                                             </div>
                                         )}
 
@@ -353,7 +383,7 @@ const AuditeeTemuan = () => {
                                                             onClick={() => {
                                                                 setSelectedTemuan(temuan);
                                                                 setDeskripsiTindakLanjut("");
-                                                                setTanggalKomitmen("");
+                                                                setDeskripsiKomitmen("");
                                                                 setShowTindakLanjutModal(true);
                                                             }}
                                                             className="flex items-center gap-1 px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-xs font-medium"
@@ -365,7 +395,7 @@ const AuditeeTemuan = () => {
                                                             onClick={() => {
                                                                 setSelectedTemuan(temuan);
                                                                 setDeskripsiTindakLanjut("");
-                                                                setTanggalKomitmen("");
+                                                                setDeskripsiKomitmen("");
                                                                 setShowTindakLanjutModal(true);
                                                             }}
                                                             className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition text-xs font-medium"
@@ -385,8 +415,7 @@ const AuditeeTemuan = () => {
                     </div>
                 )}
 
-                {/* Pagination */}
-                {pagination && pagination.last_page > 1 && !loading && (
+                {pagination && pagination.last_page > 1 && !loading && temuanData.length > 0 && (
                     <div className="mt-6 flex flex-col items-center gap-2">
                         <Pagination>
                             <PaginationContent>
@@ -395,8 +424,6 @@ const AuditeeTemuan = () => {
                                         onClick={() => {
                                             if (currentPage > 1) {
                                                 setCurrentPage(currentPage - 1);
-                                                if (filterStatus !== "Semua") fetchTemuanByStatus(filterStatus, currentPage - 1);
-                                                else fetchTemuanByRole();
                                             }
                                         }}
                                         className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
@@ -432,8 +459,6 @@ const AuditeeTemuan = () => {
                                                 <PaginationLink
                                                     onClick={() => {
                                                         setCurrentPage(i);
-                                                        if (filterStatus !== "Semua") fetchTemuanByStatus(filterStatus, i);
-                                                        else fetchTemuanByRole();
                                                     }}
                                                     isActive={currentPage === i}
                                                 >
@@ -457,8 +482,6 @@ const AuditeeTemuan = () => {
                                                 <PaginationLink
                                                     onClick={() => {
                                                         setCurrentPage(totalPages);
-                                                        if (filterStatus !== "Semua") fetchTemuanByStatus(filterStatus, totalPages);
-                                                        else fetchTemuanByRole();
                                                     }}
                                                     isActive={currentPage === totalPages}
                                                 >
@@ -476,8 +499,6 @@ const AuditeeTemuan = () => {
                                         onClick={() => {
                                             if (currentPage < pagination.last_page) {
                                                 setCurrentPage(currentPage + 1);
-                                                if (filterStatus !== "Semua") fetchTemuanByStatus(filterStatus, currentPage + 1);
-                                                else fetchTemuanByRole();
                                             }
                                         }}
                                         className={currentPage >= pagination.last_page ? "pointer-events-none opacity-50" : ""}
@@ -506,8 +527,8 @@ const AuditeeTemuan = () => {
                 selectedTemuan={selectedTemuan}
                 deskripsiTindakLanjut={deskripsiTindakLanjut}
                 onDeskripsiChange={setDeskripsiTindakLanjut}
-                tanggalKomitmen={tanggalKomitmen}
-                onTanggalKomitmenChange={setTanggalKomitmen}
+                deskripsiKomitmen={deskripsiKomitmen}
+                onDeskripsiKomitmenChange={setDeskripsiKomitmen}
                 onSubmit={handleTindakLanjut}
                 isLoading={tindakLanjutLoading}
                 hasRejectedVerifikasi={selectedTemuan ? !!hasRejectedVerifikasi(selectedTemuan) : false}

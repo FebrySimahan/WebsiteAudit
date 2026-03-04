@@ -17,6 +17,7 @@ interface ModalVerifikasiTemuanProps {
     onVerifikasiReasonChange: (value: string) => void;
     onVerifikasiTerima: () => void;
     onVerifikasiTolak: () => void;
+    onUpdate: () => void; 
     isLoading: boolean;
 }
 
@@ -29,9 +30,12 @@ const ModalVerifikasiTemuan = ({
     onVerifikasiReasonChange,
     onVerifikasiTerima,
     onVerifikasiTolak,
+    onUpdate,  
     isLoading,
 }: ModalVerifikasiTemuanProps) => {
     if (!selectedTemuan) return null;
+
+    const isSelesai = selectedTemuan.status_temuan === "Selesai";
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -57,8 +61,7 @@ const ModalVerifikasiTemuan = ({
                                     <span className="font-medium">Deskripsi:</span> {tindakLanjutData.deskripsi_tindak_lanjut}
                                 </p>
                                 <p>
-                                    <span className="font-medium">Tanggal Komitmen:</span>{" "}
-                                    {new Date(tindakLanjutData.tanggal_komitmen).toLocaleDateString("id-ID")}
+                                    <span className="font-medium">Deskripsi Komitmen:</span> {tindakLanjutData.deskripsi_komitmen}
                                 </p>
                             </div>
                         </div>
@@ -72,20 +75,33 @@ const ModalVerifikasiTemuan = ({
                     />
 
                     <div className="flex gap-3">
-                        <button
-                            onClick={onVerifikasiTerima}
-                            disabled={isLoading || !verifikasiReason.trim()}
-                            className="flex-1 px-4 py-2 bg-green-600 text-white rounded  transition disabled:opacity-50"
-                        >
-                            {isLoading ? "Memproses..." : "Terima"}
-                        </button>
-                        <button
-                            onClick={onVerifikasiTolak}
-                            disabled={isLoading || !verifikasiReason.trim()}
-                            className="flex-1 px-4 py-2 bg-red-600 text-white rounded transition disabled:opacity-50"
-                        >
-                            {isLoading ? "Memproses..." : "Tolak"}
-                        </button>
+                        {isSelesai ? (
+                            <button
+                                onClick={onUpdate}
+                                disabled={isLoading || !verifikasiReason.trim()}
+                                className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded transition disabled:opacity-50"
+                            >
+                                {isLoading ? "Memproses..." : "Update"}
+                            </button>
+                        ) : (
+                           
+                            <>
+                                <button
+                                    onClick={onVerifikasiTerima}
+                                    disabled={isLoading || !verifikasiReason.trim()}
+                                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded transition disabled:opacity-50"
+                                >
+                                    {isLoading ? "Memproses..." : "Terima"}
+                                </button>
+                                <button
+                                    onClick={onVerifikasiTolak}
+                                    disabled={isLoading || !verifikasiReason.trim()}
+                                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded transition disabled:opacity-50"
+                                >
+                                    {isLoading ? "Memproses..." : "Tolak"}
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
             </DialogContent>

@@ -6,14 +6,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import api from "@/services/api";
 
 interface DashboardStats {
-  totalTemuan: number;
+  totalTemuanVerifikasi: number;
   totalPermintaan: number;
   totalSuratTugas: number;
 }
 
 const AuditorDashboard = () => {
   const [stats, setStats] = useState<DashboardStats>({
-    totalTemuan: 0,
+    totalTemuanVerifikasi: 0,
     totalPermintaan: 0,
     totalSuratTugas: 0,
   });
@@ -38,15 +38,15 @@ const AuditorDashboard = () => {
       }
 
       const [temuanData, permintaanDataRes, suratRes] = await Promise.all([
-        temuanService.getAll(),
-        api.get("/permintaan-data/direksi"),
+        temuanService.getAllVerif(),
+        api.get("/permintaan-data/show-all-dropdown"),
         api.get("/surat-tugas")
       ]);
 
       const totalPermintaan = permintaanDataRes.data?.pagination?.total ?? (Array.isArray(permintaanDataRes.data.data) ? permintaanDataRes.data.data.length : 0);
 
       setStats({
-        totalTemuan: Array.isArray(temuanData) ? temuanData.length : 0,
+        totalTemuanVerifikasi: Array.isArray(temuanData) ? temuanData.length : 0,
         totalPermintaan,
         totalSuratTugas: Array.isArray(suratRes.data.data) ? suratRes.data.data.length : 0,
       });
@@ -65,13 +65,13 @@ const AuditorDashboard = () => {
         <p className={`text-4xl sm:text-5xl md:text-6xl font-bold ${textColor} break-words leading-tight`}>{value}</p>
       </div>
 
-      {label === "Total Temuan" ? (
-        <button
-          onClick={() => navigate("/auditor/temuan")}
-          className="bg-blue-600 text-white px-4 py-2 rounded transition font-semibold text-sm sm:text-base w-full sm:w-auto whitespace-normal"
-        >
-          Lihat Temuan
-        </button>
+      {label === "Menunggu Verifikasi" ? (
+          <button
+            onClick={() => navigate("/auditor/temuan?status=Menunggu Verifikasi")}
+            className="bg-blue-600 text-white px-4 py-2 rounded transition font-semibold text-sm sm:text-base w-full sm:w-auto whitespace-normal"
+          >
+            Menunggu Verifikasi
+          </button>
       ) : label === "Total Permintaan" ? (
         <button
           onClick={() => navigate("/auditor/permintaan-data")}
@@ -120,8 +120,8 @@ const AuditorDashboard = () => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <StatCard
-                label="Total Temuan"
-                value={stats.totalTemuan}
+                label="Menunggu Verifikasi"
+                value={stats.totalTemuanVerifikasi}
                 borderColor="border-blue-600"
                 textColor="text-blue-600"
 
@@ -140,25 +140,7 @@ const AuditorDashboard = () => {
               />
             </div>
 
-            <div className="bg-white rounded-lg p-6 shadow-md">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">
-                Ringkasan Audit
-              </h2>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                  <span className="text-gray-700">Total Kegiatan Audit</span>
-                  <span className="text-xl font-bold text-blue-600">{stats.totalPermintaan}</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                  <span className="text-gray-700">Total Temuan Teridentifikasi</span>
-                  <span className="text-xl font-bold text-red-600">{stats.totalTemuan}</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                  <span className="text-gray-700">Total Penugasan Audit</span>
-                  <span className="text-xl font-bold text-orange-600">{stats.totalSuratTugas}</span>
-                </div>
-              </div>
-            </div>
+
           </>
         )}
       </div>

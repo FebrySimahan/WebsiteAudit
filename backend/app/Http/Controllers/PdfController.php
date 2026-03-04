@@ -15,7 +15,7 @@ class PdfController extends Controller
 {
     public function generatePermintaanData($id, Request $request)
     {
-        // Eager-load nested relations so view can access users and verifikasi without extra queries
+        
         $permintaan = PermintaanData::with([
             'auditor',
             'auditee',
@@ -25,7 +25,7 @@ class PdfController extends Controller
             'temuans.responTemuans.tindakLanjuts.verifikasis',
         ])->findOrFail($id);
 
-        // Use the eager-loaded temuans collection
+       
         $temuans = $permintaan->temuans ?? collect();
 
         
@@ -40,21 +40,21 @@ class PdfController extends Controller
         $jadwalIds = $request->query('jadwal_ids');
         
         if ($jadwalIds) {
-            // Ada filter jadwal
+            
             $jadwalIdsArray = is_array($jadwalIds) ? $jadwalIds : explode(',', $jadwalIds);
             $jadwalIdsArray = array_map('intval', array_filter($jadwalIdsArray));
             
-            // Filter jadwal_audits hanya yang dipilih
+           
             $selectedJadwals = $permintaan->jadwal_audits->filter(function($jadwal) use ($jadwalIdsArray) {
                 return in_array($jadwal->id_jadwal, $jadwalIdsArray);
             })->values();
             
-            // Ambil tanggal dari jadwal yang dipilih
+          
             $selectedDates = $selectedJadwals->map(function($jadwal) {
                 return $jadwal->tanggal_audit->format('Y-m-d');
             })->toArray();
             
-            // Ambil temuan yang tanggalnya sesuai jadwal yang dipilih
+          
             $temuanBerjadwal = Temuan::where('id_permintaan', $id)
                 ->whereIn('tanggal_temuan', $selectedDates)
                 ->get();
@@ -62,7 +62,6 @@ class PdfController extends Controller
             $permintaan->jadwal_audits = $selectedJadwals;
             $permintaan->temuan = $temuanBerjadwal;
         } else {
-            // Jika tidak ada filter, ambil semua jadwal dan temuan
             $temuan = Temuan::where('id_permintaan', $id)->get();
             $permintaan->temuan = $temuan;
         }

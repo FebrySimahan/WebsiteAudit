@@ -5,17 +5,17 @@ import {
     DialogTitle,
     DialogDescription,
 } from "@/components/ui/dialog";
-import { InputField, TextareaField, DisplayField } from "@/components/ui/FormFields";
-import type { Temuan } from "@/services/temuanService";
+import { TextareaField, DisplayField } from "@/components/ui/FormFields";
+import type { TemuanItem } from "@/services/temuanService";
 
 interface ModalTindakLanjutProps {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
-    selectedTemuan: Temuan | null;
+    selectedTemuan: TemuanItem | null;
     deskripsiTindakLanjut: string;
     onDeskripsiChange: (value: string) => void;
-    tanggalKomitmen: string;
-    onTanggalKomitmenChange: (value: string) => void;
+    deskripsiKomitmen: string;
+    onDeskripsiKomitmenChange: (value: string) => void;
     onSubmit: () => void;
     isLoading: boolean;
     hasRejectedVerifikasi: boolean;
@@ -28,8 +28,8 @@ const ModalTindakLanjut = ({
     selectedTemuan,
     deskripsiTindakLanjut,
     onDeskripsiChange,
-    tanggalKomitmen,
-    onTanggalKomitmenChange,
+    deskripsiKomitmen,
+    onDeskripsiKomitmenChange,
     onSubmit,
     isLoading,
     hasRejectedVerifikasi,
@@ -70,16 +70,17 @@ const ModalTindakLanjut = ({
                         rows={4}
                     />
 
-                    <InputField
-                        label="Tanggal Komitmen"
-                        value={tanggalKomitmen}
-                        onChange={onTanggalKomitmenChange}
-                        type="date"
+                    <TextareaField
+                        label="Deskripsi Komitmen"
+                        value={deskripsiKomitmen}
+                        onChange={onDeskripsiKomitmenChange}
+                        placeholder="Masukkan deskripsi komitmen tindak lanjut..."
+                        rows={2}
                     />
 
                     <button
                         onClick={onSubmit}
-                        disabled={isLoading || !deskripsiTindakLanjut.trim() || !tanggalKomitmen}
+                        disabled={isLoading || !deskripsiTindakLanjut.trim() || !deskripsiKomitmen.trim()}
                         className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition disabled:opacity-50"
                     >
                         {isLoading ? "Menyimpan..." : "Simpan Tindak Lanjut"}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import AuditorLayout from "@/components/Layout/Auditor/AuditorLayout";
 import temuanService, { type TemuanItem, type TemuanPaginationInfo } from "@/services/temuanService";
 import permintaanDataService from "@/services/permintaanDataService";
@@ -12,7 +13,7 @@ import {
     PaginationPrevious,
     PaginationEllipsis,
 } from "@/components/ui/pagination";
-import { Eye } from "lucide-react";
+import { Eye, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ModalDetailTemuan from "@/components/Modals/ModalDetailTemuan";
@@ -24,7 +25,7 @@ const AuditorTemuan = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
-    const [filterStatus, setFilterStatus] = useState<"all" | "Terbuka" | "Menunggu Tindaklanjut" | "Menunggu Verifikasi" | "Selesai">("all");
+    const [filterStatus, setFilterStatus] = useState<undefined | "all" | "Terbuka" | "Menunggu Tindaklanjut" | "Menunggu Verifikasi" | "Selesai">();
     const [pagination, setPagination] = useState<TemuanPaginationInfo | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const perPage = 5;
@@ -44,6 +45,7 @@ const AuditorTemuan = () => {
 
     const [formData, setFormData] = useState({
         id_permintaan: "",
+        level_role: "",
         id_auditee: "",
         tanggal_temuan: "",
         judul_temuan: "",
@@ -64,7 +66,7 @@ const AuditorTemuan = () => {
                 setTemuan(result.data);
                 setPagination(result.pagination);
             } else {
-                const result = await temuanService.filterByStatus(filterStatus, currentPage, perPage);
+                const result = await temuanService.filterByStatus(filterStatus ?? "all", currentPage, perPage);
                 setTemuan(result.data);
                 setPagination(result.pagination);
             }
@@ -100,7 +102,7 @@ const AuditorTemuan = () => {
     const loadOptionsForModal = async () => {
         try {
             setError("");
-            const permintaanList = await permintaanDataService.getAll();
+            const permintaanList = await permintaanDataService.getAllDropdown();
 
             setPermintaanDataList(permintaanList);
             const auditeeMap = new Map();
@@ -122,11 +124,7 @@ const AuditorTemuan = () => {
 
     const handleCreateTemuan = async () => {
         try {
-            // Validasi data sebelum submit
-            if (!formData.id_auditee) {
-                setError("Auditee harus dipilih. Pilih permintaan data terlebih dahulu.");
-                return;
-            }
+
             if (!formData.tanggal_temuan) {
                 setError("Tanggal temuan harus dipilih.");
                 return;
@@ -154,6 +152,7 @@ const AuditorTemuan = () => {
             setFormData({
                 id_permintaan: "",
                 id_auditee: "",
+                level_role: "",
                 tanggal_temuan: "",
                 judul_temuan: "",
                 kondisi_sebenarnya: "",
@@ -193,6 +192,26 @@ const AuditorTemuan = () => {
         }
     };
 
+    const handleDoUpdate = async () => {
+        if (!selectedTemuanForVerifikasi?.verifikasi?.id_verifikasi) return;
+        try {
+            setVerifikasiLoading(true);
+            await temuanService.updateVerifikasi(
+                selectedTemuanForVerifikasi.verifikasi.id_verifikasi,
+                { catatan: verifikasiReason || null }
+            );
+            await fetchTemuan();
+            setShowVerifikasiModal(false);
+            setSelectedTemuanForVerifikasi(null);
+            setTindakLanjutData(null);
+            setVerifikasiReason("");
+            setError("");
+        } catch (err: any) {
+            setError(err.response?.data?.message || "Gagal update verifikasi");
+        } finally {
+            setVerifikasiLoading(false);
+        }
+    };
     const handleVerifikasi = async (status: "Diterima" | "Ditolak") => {
         if (!selectedTemuanForVerifikasi || !tindakLanjutData) return;
         if (status === "Ditolak" && !verifikasiReason.trim()) {
@@ -205,7 +224,7 @@ const AuditorTemuan = () => {
             await temuanService.createVerifikasi({
                 id_tindak_lanjut: tindakLanjutData.id_tindak_lanjut,
                 status_verifikasi: status,
-                catatan: verifikasiReason, // Selalu kirim catatan apapun statusnya
+                catatan: verifikasiReason,
                 tanggal_verifikasi: new Date().toISOString().split('T')[0],
             });
 
@@ -223,9 +242,28 @@ const AuditorTemuan = () => {
         }
     };
 
+    const location = useLocation();
+    const [isFilterInitialized, setIsFilterInitialized] = useState(false);
+
     useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const statusParam = params.get("status");
+        if (
+            statusParam &&
+            ["Terbuka", "Menunggu Tindaklanjut", "Menunggu Verifikasi", "Selesai"].includes(statusParam)
+        ) {
+            setFilterStatus(statusParam as any);
+            setIsFilterInitialized(true);
+        } else {
+            setFilterStatus("all");
+            setIsFilterInitialized(true);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!isFilterInitialized || filterStatus === undefined) return;
         fetchTemuan();
-    }, [filterStatus, currentPage]);
+    }, [filterStatus, currentPage, isFilterInitialized]);
 
     useEffect(() => {
         const debounceTimer = setTimeout(() => {
@@ -233,12 +271,14 @@ const AuditorTemuan = () => {
                 handleSearch(searchQuery);
             } else {
                 setCurrentPage(1);
-                fetchTemuan();
+                if (isFilterInitialized && filterStatus !== undefined) {
+                    fetchTemuan();
+                }
             }
         }, 500);
 
         return () => clearTimeout(debounceTimer);
-    }, [searchQuery]);
+    }, [searchQuery, isFilterInitialized, filterStatus]);
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -346,7 +386,7 @@ const AuditorTemuan = () => {
                                 >
                                     <div className="flex items-start justify-between mb-3">
                                         <h3 className="text-lg font-semibold text-gray-800 flex-1 pr-2">
-                                            {item.judul_temuan}
+                                            {item.permintaanData?.divisi} - {item.judul_temuan}
                                         </h3>
                                         <span className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ${getStatusColor(item.status_temuan)}`}>
                                             {item.status_temuan}
@@ -364,6 +404,7 @@ const AuditorTemuan = () => {
                                                 {new Date(item.tanggal_temuan).toLocaleDateString("id-ID")}
                                             </span>
                                         </div>
+
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => {
@@ -379,20 +420,38 @@ const AuditorTemuan = () => {
                                                 <button
                                                     onClick={() => handleVerifikasiClick(item)}
                                                     disabled={verifikasiLoading}
-                                                    className="flex items-center gap-1 px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 transition text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                                    className="flex items-center gap-1 px-2 py-1 bg-purple-600 text-white rounded text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                                                 >
                                                     {verifikasiLoading ? "Memuat..." : "Verifikasi"}
                                                 </button>
                                             )}
+                                            {item.verifikasi?.status_verifikasi === "Diterima" && (
+
+
+                                                <div className="flex justify-between items-center">
+                                                    <button
+                                                        className="flex items-center gap-1 px-2 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition text-xs font-medium whitespace-nowrap"
+                                                        onClick={() => {
+                                                            setSelectedTemuanForVerifikasi(item);
+                                                            setVerifikasiReason(item.verifikasi?.catatan || "");
+                                                            setShowVerifikasiModal(true);
+                                                        }}
+
+                                                        disabled={verifikasiLoading}
+                                                    >
+                                                        <Pencil size={12} />
+                                                        Update
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-
-                                    {item.responTemuans && item.responTemuans.length > 0 && item.responTemuans.some((r: any) => r.status_respon === 'Ditolak') && (
-                                        <div className="bg-red-50 border border-red-200 rounded p-3 mt-3">
-                                            <p className="text-xs font-semibold text-red-800 mb-2">Ditolak Auditee  :</p>
-                                            <p className="text-xs text-red-700 leading-relaxed">
-                                                {item.responTemuans.find((r: any) => r.status_respon === 'Ditolak')?.alasan_penolakan || "Tidak ada alasan penolakan"}
-                                            </p>
+                                    {item.verifikasi && item.verifikasi.catatan && (
+                                        <div className="bg-green-50 border border-green-200 rounded p-3 ">
+                                            <div className="text-xs text-green-700 leading-relaxed">
+                                                <span className="font-medium">Catatan Verifikasi:</span>
+                                                <p className="text-green-700">{item.verifikasi?.catatan}</p>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -401,7 +460,7 @@ const AuditorTemuan = () => {
                     </div>
                 )}
 
-                {pagination && pagination.last_page > 1 && !loading && (
+                {filterStatus === "all" && pagination && pagination.last_page > 1 && !loading && (
                     <div className="mt-6 flex flex-col items-center gap-2">
                         <Pagination>
                             <PaginationContent>
@@ -482,6 +541,10 @@ const AuditorTemuan = () => {
                         </Pagination>
                     </div>
                 )}
+                {filterStatus !== "all" && !loading && (
+                    <div className="mt-6 flex flex-col items-center gap-2">
+                    </div>
+                )}
 
 
                 <ModalDetailTemuan
@@ -512,6 +575,7 @@ const AuditorTemuan = () => {
                     onVerifikasiReasonChange={setVerifikasiReason}
                     onVerifikasiTerima={() => handleVerifikasi("Diterima")}
                     onVerifikasiTolak={() => handleVerifikasi("Ditolak")}
+                    onUpdate={handleDoUpdate}  // tambah ini
                     isLoading={verifikasiLoading}
                 />
             </div>

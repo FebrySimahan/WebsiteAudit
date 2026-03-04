@@ -15,6 +15,44 @@ class VerifikasiController extends Controller
     /**
      * Verifikasi tindak lanjut
      */
+
+    public function updateVerifikasi(Request $request, $id): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'catatan' => 'nullable|string',
+            ]);
+
+            $verifikasi = Verifikasi::find($id);
+            if (!$verifikasi) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Verifikasi tidak ditemukan',
+                ], 404);
+            }
+
+            $validated['id_auditor'] = $request->user()->id;
+
+            $verifikasi->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Verifikasi berhasil diupdate',
+                'data' => $verifikasi
+            ], 200);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengupdate verifikasi: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
     public function createVerifikasi(Request $request): JsonResponse
     {
         try {
@@ -83,6 +121,8 @@ class VerifikasiController extends Controller
             ], 500);
         }
     }
+
+
 
 
     private function updateTemuanStatusWhenVerified($idTemuan)

@@ -17,6 +17,8 @@ import ScoreboardDireksi from "./Pages/Scoreboard/ScoreboardDireksi";
 import ScoreboardAuditor from "./Pages/Scoreboard/ScoreboardAuditor";
 import AuditeeTemuan from "./Pages/AuditeePage/AuditeeTemuan";
 
+const validRoles = ['KTI', 'KSO', 'KBO', 'KSA', 'KBL', 'KSL', 'TLU', 'KSR', 'KBF', 'KSF', 'PE'];
+
 
 
 function App() {
@@ -47,7 +49,7 @@ function App() {
         <Route path="/auditor/temuan" element={<AuditorTemuan />} />
       </Route>
       {/* role apapun itu selain dirkom sama 2 user id  */}
-      <Route element={<RoleProtectedRoute deniedRoles={["DIREKSI", "DIR", "KOM"]} deniedUserIds={[39, 70]} />}>
+      <Route element={<RoleProtectedRoute deniedRoles={["DIREKSI", "DIR", "KOM"]} deniedUserIds={[39, 70]} allowedRoles={validRoles} />}>
         <Route path="/auditee-dashboard" element={<AuditeeDashboard />} />
         <Route path="/auditee/temuan" element={<AuditeeTemuan />} />
       </Route>

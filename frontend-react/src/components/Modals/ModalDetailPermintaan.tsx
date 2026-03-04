@@ -47,25 +47,6 @@ const ModalDetailPermintaan = ({
                             {permintaan.deskripsi || "-"}
                         </p>
                     </div>
-
-                    <div>
-                        <h3 className="font-semibold text-gray-800 mb-3">Auditee yang Ditugaskan</h3>
-                        {permintaan.auditee ? (
-                            <div className="bg-blue-50 rounded p-3">
-                                <p className="text-sm"><span className="text-gray-600">Nama  :</span> {permintaan.auditee.name}</p>
-                                <p className="text-sm"><span className="text-gray-600">Email            :</span> {permintaan.auditee.email}</p>
-                                <p className="text-sm">
-                                    <span className="text-gray-600">Role  : </span>
-                                    <span>
-                                        {permintaan.auditee.level_role}
-                                    </span>
-                                </p>
-                            </div>
-                        ) : (
-                            <p className="text-gray-500">-</p>
-                        )}
-                    </div>
-
                     <div>
                         <h3 className="font-semibold text-gray-800 mb-3">Jadwal Audit Terkait</h3>
                         {permintaan.jadwal_audits && permintaan.jadwal_audits.length > 0 ? (

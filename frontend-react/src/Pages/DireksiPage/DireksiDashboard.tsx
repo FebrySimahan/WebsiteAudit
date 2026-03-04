@@ -96,7 +96,7 @@ const DireksiDashboard = () => {
     loadInitialData();
   }, []);
 
-  const StatCard = ({ label, value, color, bgColor,  onClick }: any) => (
+  const StatCard = ({ label, value, value2, color, bgColor, onClick }: any) => (
     <div className={`bg-white rounded-lg p-6 border ${color} transition overflow-hidden`}>
       <h2 className={`text-lg sm:text-2xl font-bold ${color} mb-2 break-words leading-tight`}>{label}</h2>
       <div className="mb-4">
@@ -107,9 +107,7 @@ const DireksiDashboard = () => {
         ) : (
           <>
             <p className={`text-4xl sm:text-5xl md:text-6xl font-bold ${color} break-words leading-tight`}>{value}</p>
-            <p className={`text-${"sm"} font-bold text-sm sm:text-base ${color}`}>
-              {label === "Total Permintaan Data" ? "Semua permintaan data" : label === "Temuan Audit" ? "Semua Temuan Audit" : ""}
-            </p>
+
           </>
         )}
       </div>
@@ -117,7 +115,9 @@ const DireksiDashboard = () => {
         <button onClick={onClick} className={`px-4 py-2 rounded transition font-semibold text-sm sm:text-base w-full sm:w-auto ${bgColor} ${color} whitespace-normal`}>
           Lihat Detail
         </button>
+
       )}
+      <p className={` text-xl sm:text-xl md:text-xl font-bold ${color} break-words leading-tight`}>{value2}</p>
     </div>
   );
 
@@ -153,11 +153,12 @@ const DireksiDashboard = () => {
             <StatCard
               label="Temuan Tertinggi"
               value={topTerparah.count}
-              borderColor={
-                topTerparah.tingkatParah === "Rendah" ? "border-blue-600" :
-                  topTerparah.tingkatParah === "Sedang" ? "border-yellow-600" :
-                    topTerparah.tingkatParah === "Tinggi" ? "border-red-600" :
-                      "border-gray-600"
+              value2={topTerparah.tingkatParah}
+              color={
+                topTerparah.tingkatParah === "Rendah" ? "text-blue-600" :
+                  topTerparah.tingkatParah === "Sedang" ? "text-yellow-600" :
+                    topTerparah.tingkatParah === "Tinggi" ? "text-red-600" :
+                      "text-gray-600"
               }
               textColor={warnaCard(topTerparah.tingkatParah)}
             />

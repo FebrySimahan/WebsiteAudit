@@ -21,7 +21,7 @@ class TindakLanjutController extends Controller
         $validated = $request->validate([
             'id_temuan' => 'required|exists:temuans,id_temuan',
             'deskripsi_tindak_lanjut' => 'required|string',
-            'tanggal_komitmen' => 'required|date',
+            'deskripsi_komitmen' => 'required|string',
             'status' => 'nullable|in:Proses,Selesai',
         ]);
 
@@ -43,7 +43,7 @@ class TindakLanjutController extends Controller
             // Update data lama
             $tindakLanjut->update([
                 'deskripsi_tindak_lanjut' => $validated['deskripsi_tindak_lanjut'],
-                'tanggal_komitmen' => $validated['tanggal_komitmen'],
+                'deskripsi_komitmen' => $validated['deskripsi_komitmen'],
                 'status' => $validated['status'] ?? 'Proses',
             ]);
             $message = 'Tindak lanjut berhasil diupdate';
@@ -53,7 +53,7 @@ class TindakLanjutController extends Controller
                 'id_respon' => $respon->id_respon,
                 'id_auditee' => $respon->id_auditee,
                 'deskripsi_tindak_lanjut' => $validated['deskripsi_tindak_lanjut'],
-                'tanggal_komitmen' => $validated['tanggal_komitmen'],
+                'deskripsi_komitmen' => $validated['deskripsi_komitmen'],
                 'status' => $validated['status'] ?? 'Proses',
             ]);
             $message = 'Tindak lanjut berhasil dibuat';

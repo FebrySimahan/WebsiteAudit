@@ -24,6 +24,7 @@ class Temuan extends Model
         'rekomendasi',
         'tingkat_keparahan',
         'status_temuan',
+        'level_role',
     ];
 
     protected $casts = [

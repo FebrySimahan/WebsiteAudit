@@ -21,7 +21,6 @@ class ResponTemuanController extends Controller
                 'id_temuan' => 'required|exists:temuans,id_temuan',
                 'id_auditee' => 'required|exists:users,id',
                 'status_respon' => 'required|in:Diterima,Ditolak',
-                'alasan_penolakan' => 'nullable|string',
                 'tanggal_respon' => 'required|date',
             ]);
 

@@ -6,9 +6,13 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 import type { TemuanItem as TemuanItemBase } from "@/services/temuanService";
+import { useEffect, useState } from "react";
+import permintaanDataService from "@/services/permintaanDataService";
+import type { PermintaanDataItem } from "@/services/permintaanDataService";
 
 type TemuanItem = TemuanItemBase & {
     auditee?: { name?: string } | null;
+    id_permintaan?: number | null;
 };
 
 interface ModalDetailTemuanProps {
@@ -26,6 +30,19 @@ const ModalDetailTemuan = ({
     getSeverityColor,
     getStatusColor,
 }: ModalDetailTemuanProps) => {
+    const [permintaan, setPermintaan] = useState<PermintaanDataItem | null>(null);
+
+    useEffect(() => {
+        if (temuan?.id_permintaan) {
+            permintaanDataService.getAll().then((data) => {
+                const found = data.find((item) => item.id_permintaan === temuan.id_permintaan);
+                setPermintaan(found || null);
+            });
+        } else {
+            setPermintaan(null);
+        }
+    }, [temuan]);
+
     if (!temuan) return null;
 
     return (
@@ -39,10 +56,13 @@ const ModalDetailTemuan = ({
                 </DialogHeader>
 
                 <div className="space-y-4">
-                    <div>
-                        <p className="text-sm font-semibold text-gray-700 mb-2">Nama Auditee:</p>
-                        <p className="text-sm text-gray-600">{temuan.auditee?.name || "-"}</p>
-                    </div>
+                    {permintaan && (
+                        <div>
+                            <p className="text-sm font-semibold text-gray-700 mb-2">Divisi Permintaan:</p>
+                            <p className="text-sm text-gray-600">{permintaan.divisi}</p>
+                        </div>
+                    )}
+
                     <div>
                         <p className="text-sm font-semibold text-gray-700 mb-2">Judul Temuan:</p>
                         <p className="text-sm text-gray-600">{temuan.judul_temuan}</p>

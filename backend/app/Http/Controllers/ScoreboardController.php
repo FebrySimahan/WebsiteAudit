@@ -11,35 +11,37 @@ class ScoreboardController extends Controller
 
     public function index()
     {
-
-        $auditeeRoles = ['TI', 'Remedial', 'Lending', 'Funding', 'Operational'];
+        //ini buat nampilin role besar di scoreboard
+        $auditeeRoles = ['Kepala Teknologi Informasi', 'Kepatuhan','Manajemen Remedial', 'Lending', 'Funding', 'Operational'];
         
+        //level role yang digabung di role besar utama
         $roleMapping = [
-            'TI' => 'TI',
-            'KTI' => 'TI',
-            'BE' => 'Remedial',  
-            'FE' => 'Remedial',  
-            'KSR' => 'Remedial',  
-            'TLR' => 'Remedial',
-            'SA' => 'Lending',
-            'AO' => 'Lending',
-            'RO' => 'Lending',
-            'SO' => 'Lending',
-            'TLL' => 'Lending',
-            'KSL' => 'Lending',
-            'FO' => 'Funding',
-            'KSF' => 'Funding',
-            'TLF' => 'Funding',
+            'KTI' => 'Kepala Teknologi Informasi', //1 org
+            'KSO' => 'Operational', //1 org
+            'KBO' => 'Operational', //1 org
+            'KSA' => 'Operational', //1 org
+            'KBL' => 'Lending', //1 org
+            'KSL' => 'Lending', //1 org
+            'TLU' => 'Lending', //blm ada org
+            'KSR' => 'Lending', //2 org
+            'KBF' => 'Funding', //1 org
+            'KSF' => 'Funding', //2 org
         ];
-        
+
+        $peMapping = [
+            44 => 'Kepatuhan', // ID user PE untuk Kepatuhan 1 org
+            27 => 'Manajemen Remedial',        // ID user PE untuk  1 org
+        ];
+
 
         $users = User::select('id', 'name', 'level_role')
             ->get()
-            ->map(function($user) use ($roleMapping) {
-                if (isset($roleMapping[$user->level_role])) {
+            ->map(function($user) use ($roleMapping, $peMapping) {
+                if (isset($peMapping[$user->id])) {
+                    $user->level_role = $peMapping[$user->id];
+                } elseif (isset($roleMapping[$user->level_role])) {
                     $user->level_role = $roleMapping[$user->level_role];
                 } else {
-                    $user->level_role = 'Operational';
                 }
                 return $user;
             });
@@ -50,6 +52,7 @@ class ScoreboardController extends Controller
             $roleUsers = $users->where('level_role', $role);
             
             $userCount = $roleUsers->count();
+            
             
             $poinAwal = 100;
             $totalPotongan = 0;
@@ -64,6 +67,7 @@ class ScoreboardController extends Controller
             $auditeeDetails = [];
 
             foreach ($roleUsers as $user) {
+                // Filter: hanya ambil temuan yang id_auditee = user->id
                 $temuans = Temuan::where('id_auditee', $user->id)
                     ->whereHas('responTemuans', function ($query) {
                         $query->where('status_respon', 'Diterima');
@@ -73,7 +77,7 @@ class ScoreboardController extends Controller
 
                 $totalTemuans += $temuans->count();
 
-                // sini buat atur skorny
+                // sini buat atur skorny dari masing masing role besar
                 $potongan = $temuans->sum(
                 function ($temuan) {
                     return match ($temuan->tingkat_keparahan) {
