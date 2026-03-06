@@ -8,7 +8,6 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogDescription,
 } from "@/components/ui/dialog";
 
 // Mapping dari level_role ke divisi scoreboard
@@ -63,20 +62,20 @@ const ScoreboardAuditee = () => {
 
     const canViewDetail = (scoreboardRole: string): boolean => {
         if (!currentUser) return false;
-        
+
         const userLevel = currentUser.level_role;
-        
+
         // Check jika user adalah PE berdasarkan ID
         if (userLevel === 'PE' && currentUser.id in PE_ID_MAPPING) {
             const peAssignedRole = PE_ID_MAPPING[currentUser.id];
             console.log(`PE user ID ${currentUser.id} mapped to ${peAssignedRole}, comparing with ${scoreboardRole}`);
             return peAssignedRole === scoreboardRole;
         }
-        
+
         // Check berdasarkan level_role mapping untuk user biasa
         const mappedUserRole = ROLE_MAPPING[userLevel as keyof typeof ROLE_MAPPING] || userLevel;
         console.log(`Comparing user role ${userLevel} mapped to ${mappedUserRole} with scoreboard ${scoreboardRole}`);
-        
+
         return mappedUserRole === scoreboardRole;
     };
 
@@ -176,11 +175,10 @@ const ScoreboardAuditee = () => {
                                                 setShowDetailsModal(true);
                                             }}
                                             disabled={!canViewDetail(item.level_role)}
-                                            className={`px-3 sm:px-4 py-2 rounded hover:transition font-medium text-xs sm:text-sm w-full sm:w-auto ${
-                                                canViewDetail(item.level_role)
-                                                    ? "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
-                                                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                            }`}
+                                            className={`px-3 sm:px-4 py-2 rounded hover:transition font-medium text-xs sm:text-sm w-full sm:w-auto ${canViewDetail(item.level_role)
+                                                ? "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                                                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                                }`}
                                         >
                                             Detail
                                         </button>
@@ -196,66 +194,40 @@ const ScoreboardAuditee = () => {
                     <Dialog open={showDetailsModal} onOpenChange={setShowDetailsModal}>
                         <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
                             <DialogHeader>
-                                <DialogTitle>Detail - {selectedRole.level_role}</DialogTitle>
-                                <DialogDescription>
-                                    Daftar auditee dan temuan untuk level role {selectedRole.level_role}.
-                                </DialogDescription>
+                                <DialogTitle>Semua Temuan - {selectedRole.level_role}</DialogTitle>
                             </DialogHeader>
 
-                            <div className="flex-1 overflow-y-auto space-y-4 pr-4">
-                                {/* Daftar Auditee */}
-                                <div>
-                                    <h3 className="font-bold text-gray-800 mb-2">Daftar Auditee:</h3>
-                                    <div className="bg-blue-50 rounded p-3 space-y-2">
-                                        {selectedRole.auditees && selectedRole.auditees.length > 0 ? (
-                                            selectedRole.auditees.map((auditee: any) => (
-                                                <div key={auditee.id} className="text-sm">
-                                                    <p className="font-medium text-gray-800">{auditee.name}</p>
-                                                    <p className="text-xs text-gray-600">Level: {auditee.level_role}</p>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <p className="text-sm text-gray-500">Tidak ada auditee</p>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Daftar Temuan */}
-                                <div>
-                                    <h3 className="font-bold text-gray-800 mb-2">Daftar Temuan:</h3>
-                                    <div className="space-y-2">
-                                        {selectedRole.temuans && selectedRole.temuans.length > 0 ? (
-                                            selectedRole.temuans.map((temuan) => (
-                                                <div
-                                                    key={temuan.id_temuan}
-                                                    className="bg-gray-50 rounded p-3 text-sm border-pink-700 flex items-center justify-between">
-                                                    <div className="flex-1">
-                                                        <p className="font-medium text-gray-800">{temuan.judul_temuan}</p>
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <span>Tingkat Keparahan : </span>
-                                                            <span className={`text-xs px-2 py-1 rounded font-semibold ${temuan.tingkat_keparahan === 'Tinggi' ? 'bg-red-100 text-red-700' :
-                                                                temuan.tingkat_keparahan === 'Sedang' ? 'bg-yellow-100 text-yellow-700' :
-                                                                    'bg-blue-100 text-blue-700'
-                                                                }`}>
-                                                                {temuan.tingkat_keparahan}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <span className={`text-xs px-2 py-1 rounded font-medium ${temuan.status_temuan === 'Selesai' ? 'bg-green-100 text-green-700' :
-                                                        temuan.status_temuan === 'Menunggu Verifikasi' ? 'bg-blue-100 text-blue-700' :
-                                                            temuan.status_temuan === 'Menunggu Tindaklanjut' ? 'bg-purple-100 text-purple-700' :
-                                                                temuan.status_temuan === 'Terbuka' ? 'bg-yellow-100 text-yellow-700' :
-                                                                    'bg-gray-100 text-gray-700'
+                            <div className="flex-1 overflow-y-auto space-y-2 pr-4">
+                                {selectedRole.temuans && selectedRole.temuans.length > 0 ? (
+                                    selectedRole.temuans.map((temuan) => (
+                                        <div
+                                            key={temuan.id_temuan}
+                                            className="bg-gray-50 rounded p-3 text-sm border-pink-700 flex items-center justify-between">
+                                            <div className="flex-1">
+                                                <p className="font-medium text-gray-800">{temuan.judul_temuan}</p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <span>Tingkat Keparahan : </span>
+                                                    <span className={`text-xs px-2 py-1 rounded font-semibold ${temuan.tingkat_keparahan === 'Tinggi' ? 'bg-red-100 text-red-700' :
+                                                        temuan.tingkat_keparahan === 'Sedang' ? 'bg-yellow-100 text-yellow-700' :
+                                                            'bg-blue-100 text-blue-700'
                                                         }`}>
-                                                        {temuan.status_temuan}
+                                                        {temuan.tingkat_keparahan}
                                                     </span>
                                                 </div>
-                                            ))
-                                        ) : (
-                                            <p className="text-center text-gray-500 py-4">Tidak ada temuan</p>
-                                        )}
-                                    </div>
-                                </div>
+                                            </div>
+                                            <span className={`text-xs px-2 py-1 rounded font-medium ${temuan.status_temuan === 'Selesai' ? 'bg-green-100 text-green-700' :
+                                                temuan.status_temuan === 'Menunggu Verifikasi' ? 'bg-blue-100 text-blue-700' :
+                                                    temuan.status_temuan === 'Menunggu Tindaklanjut' ? 'bg-purple-100 text-purple-700' :
+                                                        temuan.status_temuan === 'Terbuka' ? 'bg-yellow-100 text-yellow-700' :
+                                                            'bg-gray-100 text-gray-700'
+                                                }`}>
+                                                {temuan.status_temuan}
+                                            </span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-center text-gray-500 py-4">Tidak ada temuan</p>
+                                )}
                             </div>
                         </DialogContent>
                     </Dialog>

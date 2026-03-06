@@ -19,6 +19,7 @@ class PdfController extends Controller
         $permintaan = PermintaanData::with([
             'auditor',
             'auditee',
+            'surat',
             'jadwal_audits',
             'temuans.auditee',
             'temuans.auditor',

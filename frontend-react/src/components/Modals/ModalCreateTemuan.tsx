@@ -160,7 +160,8 @@ const ModalCreateTemuan = ({
                                 value={formData.tanggal_temuan}
                                 onChange={updateField("tanggal_temuan")}
                                 options={tanggalOptions}
-                                placeholder="Pilih Tanggal Audit"
+                                placeholder={!localPermintaanId ? "Pilih Ikhtisar Temuan terlebih dahulu" : "Pilih Tanggal Audit"}
+                                disabled={!localPermintaanId}
                             />
                         ) : (
                             <InputField
@@ -168,7 +169,8 @@ const ModalCreateTemuan = ({
                                 type="date"
                                 value={formData.tanggal_temuan}
                                 onChange={updateField("tanggal_temuan")}
-                                placeholder="Pilih Tanggal Temuan"
+                                placeholder={!localPermintaanId ? "Pilih Ikhtisar Temuan terlebih dahulu" : "Pilih Tanggal Temuan"}
+                                disabled={!localPermintaanId}
                             />
                         )}
 

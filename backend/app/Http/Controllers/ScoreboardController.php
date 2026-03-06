@@ -109,33 +109,7 @@ class ScoreboardController extends Controller
 
             $totalPoin = $poinAwal - $totalPotongan;
             
-            // Populate auditee details dengan data user dan temuan mereka
             $auditeeDetails = [];
-            foreach ($roleUsers as $user) {
-                $userTemuans = $allTemuanList->filter(function($temuan) use ($user) {
-                    return $temuan->id_auditee == $user->id || $temuan->level_role == $user->level_role;
-                });
-                
-                $userDetailTemuan = [
-                    'Rendah' => 0,
-                    'Sedang' => 0,
-                    'Tinggi' => 0,
-                ];
-                
-                foreach ($userTemuans as $temuan) {
-                    if (isset($userDetailTemuan[$temuan->tingkat_keparahan])) {
-                        $userDetailTemuan[$temuan->tingkat_keparahan]++;
-                    }
-                }
-                
-                $auditeeDetails[] = [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'level_role' => $user->level_role,
-                    'temuan_count' => $userTemuans->count(),
-                    'detail_temuan' => $userDetailTemuan,
-                ];
-            }
 
             $scoreboardByRole[] = [
                 'level_role' => $role,
@@ -144,18 +118,7 @@ class ScoreboardController extends Controller
                 'temuan_count' => $totalTemuans,
                 'detail_temuan' => $detailTemuans,
                 'auditees' => $auditeeDetails,
-                'temuans' => $allTemuanList->map(function($temuan) {
-                    return [
-                        'id_temuan' => $temuan->id,
-                        'judul_temuan' => $temuan->judul_temuan,
-                        'tingkat_keparahan' => $temuan->tingkat_keparahan,
-                        'status_temuan' => $temuan->status_temuan,
-                        'auditee' => $temuan->auditee ? [
-                            'id' => $temuan->auditee->id,
-                            'name' => $temuan->auditee->name,
-                        ] : null,
-                    ];
-                })->values(),
+                'temuans' => $allTemuanList,
             ];
         }
 

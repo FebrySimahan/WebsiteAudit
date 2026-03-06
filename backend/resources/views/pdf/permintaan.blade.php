@@ -184,7 +184,7 @@
     <tr>
         <td><img src="{{ public_path('/msa.png') }}" alt="" style="max-width: 100px;"></td>
         <td><h4>IKHTISAR TEMUAN DAN REKOMENDASI HASIL AUDIT</h4></td>
-        <td><h5>Nomor : {{ sprintf('%03d', $permintaan->surat->id_surat ?? 0) }}/AI/DIR-MSA/{{ ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][now()->month - 1] }}/{{ date('Y') }}</h5></td>
+        <td><h5>Nomor : {{ sprintf('%03d', $permintaan->id_surat ?? ($permintaan->surat->id_surat ?? 0)) }}/AI/DIR-MSA/{{ ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][now()->month - 1] }}/{{ date('Y') }}</h5></td>
     
       
     </tr>
