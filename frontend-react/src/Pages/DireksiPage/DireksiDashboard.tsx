@@ -28,15 +28,13 @@ const DireksiDashboard = () => {
       else if (temuan.tingkat_keparahan === "Tinggi") tinggi++;
     });
 
-    if (rendah > sedang && rendah > tinggi) {
-      return { tingkatParah: "Rendah", count: rendah };
-    } else if (sedang > rendah && sedang > tinggi) {
-      return { tingkatParah: "Sedang", count: sedang };
-    } else if (tinggi > 0) {
-      return { tingkatParah: "Tinggi", count: tinggi };
-    }
+    const maxCount = Math.max(rendah, sedang, tinggi);
+    if (maxCount === 0) return { tingkatParah: "-", count: 0 };
 
-    return { tingkatParah: "-", count: 0 };
+    // Jika ada yang sama banyak, tampilkan yang paling rendah tingkatnya
+    if (rendah === maxCount) return { tingkatParah: "Rendah", count: rendah };
+    if (sedang === maxCount) return { tingkatParah: "Sedang", count: sedang };
+    return { tingkatParah: "Tinggi", count: tinggi };
   };
 
   const warnaCard = (tingkatParah: string) => {
