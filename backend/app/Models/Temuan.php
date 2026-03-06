@@ -28,7 +28,7 @@ class Temuan extends Model
     ];
 
     protected $casts = [
-        'tanggal_temuan' => 'date',
+        'tanggal_temuan' => 'date:Y-m-d',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

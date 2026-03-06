@@ -71,7 +71,7 @@ export interface TemuanPaginatedResponse {
 const temuanService = {
     getAll: async (): Promise<TemuanItem[]> => {
         try {
-            const res = await api.get<TemuanResponse>("/temuan/");
+            const res = await api.get<TemuanResponse>("/temuan/?per_page=-1");
             return Array.isArray(res.data.data) ? res.data.data : [res.data.data];
         } catch (error) {
             throw error;
@@ -293,6 +293,15 @@ const temuanService = {
                 params: { status }
             });
             return res.data.count;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    finalizeTemuan: async (id: number) => {
+        try {
+            const res = await api.post(`/temuan/${id}/finalize`);
+            return res.data;
         } catch (error) {
             throw error;
         }

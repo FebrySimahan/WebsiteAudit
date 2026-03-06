@@ -66,12 +66,15 @@ const AuditorDashboard = () => {
       </div>
 
       {label === "Menunggu Verifikasi" ? (
-          <button
-            onClick={() => navigate("/auditor/temuan?status=Menunggu Verifikasi")}
-            className="bg-blue-600 text-white px-4 py-2 rounded transition font-semibold text-sm sm:text-base w-full sm:w-auto whitespace-normal"
-          >
-            Menunggu Verifikasi
-          </button>
+        <button
+          onClick={() => {
+            sessionStorage.setItem("temuanFilterNavigation", "true");
+            navigate(`/auditor/temuan?status=${encodeURIComponent("Menunggu Verifikasi")}`);
+          }}
+          className="bg-purple-600 text-white px-4 py-2 rounded transition font-semibold text-sm sm:text-base w-full sm:w-auto whitespace-normal"
+        >
+          Menunggu Verifikasi
+        </button>
       ) : label === "Total Permintaan" ? (
         <button
           onClick={() => navigate("/auditor/permintaan-data")}
@@ -122,8 +125,8 @@ const AuditorDashboard = () => {
               <StatCard
                 label="Menunggu Verifikasi"
                 value={stats.totalTemuanVerifikasi}
-                borderColor="border-blue-600"
-                textColor="text-blue-600"
+                borderColor="border-purple-600"
+                textColor="text-purple-600"
 
               />
               <StatCard

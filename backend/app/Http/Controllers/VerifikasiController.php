@@ -6,6 +6,7 @@ use App\Models\Verifikasi;
 use App\Models\Temuan;
 use App\Models\PermintaanData;
 use App\Models\TindakLanjut;
+use App\Models\JadwalAudit;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
@@ -96,7 +97,8 @@ class VerifikasiController extends Controller
                         \Log::error('Gagal mengupdate status tindak lanjut: ' . $e->getMessage());
                     }
 
-                    $this->updateTemuanStatusWhenVerified($idTemuan);
+                    // Status temuan tetap "Menunggu Verifikasi", tidak langsung berubah ke "Selesai"
+                    // Temuan akan diubah menjadi "Selesai" melalui endpoint khusus
                 } else {
                     Temuan::where('id_temuan', $idTemuan)
                         ->update(['status_temuan' => 'Menunggu Tindaklanjut']);
@@ -144,4 +146,78 @@ class VerifikasiController extends Controller
         } catch (\Exception $e) {
         }
     }
+
+    /**
+     * Selesaikan temuan (update status ke Selesai)
+     */
+    public function finalizeTemuan(Request $request, $id): JsonResponse
+    {
+        try {
+            $temuan = Temuan::find($id);
+            if (!$temuan) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Temuan tidak ditemukan',
+                ], 404);
+            }
+
+            // Hanya bisa diselesaikan jika statusnya "Menunggu Verifikasi"
+            if ($temuan->status_temuan !== 'Menunggu Verifikasi') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Temuan hanya bisa diselesaikan dari status Menunggu Verifikasi',
+                ], 400);
+            }
+
+            // Cek apakah verifikasi sudah diterima
+            // Jika ada tindak lanjut, verifikasi harus diterima sebelum dapat diselesaikan
+            if ($temuan->responTemuan && $temuan->responTemuan->tindakLanjut) {
+                $verifikasi = Verifikasi::where('id_tindak_lanjut', $temuan->responTemuan->tindakLanjut->id_tindak_lanjut)->first();
+                if (!$verifikasi || $verifikasi->status_verifikasi !== 'Diterima') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Verifikasi harus diterima terlebih dahulu sebelum menyelesaikan temuan',
+                    ], 400);
+                }
+            }
+
+            $temuan->update(['status_temuan' => 'Selesai']);
+
+            // Update jadwal audit status to Selesai dengan tanggal yang sama dengan tanggal_temuan
+            if ($temuan->id_permintaan && $temuan->tanggal_temuan) {
+                // Konversi tanggal untuk perbandingan
+                $tanggalTemuanString = $temuan->tanggal_temuan instanceof \DateTime 
+                    ? $temuan->tanggal_temuan->format('Y-m-d')
+                    : \Carbon\Carbon::parse($temuan->tanggal_temuan)->format('Y-m-d');
+                
+                \Log::info('VerifikasiController::finalizeTemuan - UPDATE JADWAL', [
+                    'id_temuan' => $temuan->id_temuan,
+                    'id_permintaan' => $temuan->id_permintaan,
+                    'tanggal_temuan' => $tanggalTemuanString,
+                    'type_tanggal_temuan' => gettype($temuan->tanggal_temuan)
+                ]);
+                
+                // Update jadwal audit yang cocok
+                $updated = JadwalAudit::where('id_permintaan', $temuan->id_permintaan)
+                    ->whereRaw("DATE_FORMAT(tanggal_audit, '%Y-%m-%d') = ?", [$tanggalTemuanString])
+                    ->update(['status_jadwal' => 'Selesai']);
+                
+                \Log::info('VerifikasiController::finalizeTemuan - UPDATE RESULT', [
+                    'rows_updated' => $updated
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Temuan berhasil diselesaikan dan jadwal audit telah diupdate',
+                'data' => $temuan
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menyelesaikan temuan: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }
+

@@ -21,6 +21,7 @@ class PermintaanData extends Model
         'jenis_permintaan',
         'status_permintaan',
         'level_role',
+        'cek_verif',
     ];
 
     protected $casts = [

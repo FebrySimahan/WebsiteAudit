@@ -50,6 +50,7 @@ const LoginPage = () => {
               placeholder="Username"
               value={name}
               onChange={e => setName(e.target.value)}
+              autoComplete="username"
               disabled={loading}
               className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
             />
@@ -61,6 +62,7 @@ const LoginPage = () => {
               ref={passwordRef}
               type="password"
               placeholder="Password"
+              autoComplete="current-password"
               disabled={loading}
               className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
             />

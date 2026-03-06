@@ -18,7 +18,7 @@ class JadwalAudit extends Model
     ];
 
     protected $casts = [
-        'tanggal_audit' => 'date',
+        'tanggal_audit' => 'date:Y-m-d',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];

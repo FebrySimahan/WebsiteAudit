@@ -74,6 +74,21 @@ class TemuanController extends Controller
             $query->where('status_temuan', $status);
         }
 
+        // If per_page is -1, return all data without pagination
+        if ($perPage == -1) {
+            $temuans = $query->get();
+            return response()->json([
+                'success' => true,
+                'data' => $this->transformTemuans($temuans),
+                'pagination' => [
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => $temuans->count(),
+                    'total' => $temuans->count(),
+                ],
+            ]);
+        }
+
         $temuans = $query->paginate($perPage);
 
         return response()->json([
@@ -197,7 +212,7 @@ class TemuanController extends Controller
         $levelRole = $request->user()->level_role;
 
         try {
-            $query = Temuan::with(['permintaanData', 'auditor', 'auditee', 'responTemuans', 'verifikasi'])
+            $query = Temuan::with(['permintaanData', 'auditor', 'auditee', 'responTemuans'])
                 ->where('level_role', $levelRole)
                 ->orderBy('tanggal_temuan', 'desc');
 
@@ -232,7 +247,8 @@ class TemuanController extends Controller
         $levelRole = $request->user()->level_role;
         try {
             $query = Temuan::with(['permintaanData', 'auditor', 'auditee', 'responTemuans'])
-                ->where('level_role', $levelRole);
+                ->where('level_role', $levelRole)
+                ->orderBy('tanggal_temuan', 'desc');
 
             if ($status && $status !== 'all') {
                 $query->where('status_temuan', $status);
@@ -316,7 +332,7 @@ class TemuanController extends Controller
             $validated = $request->validate([
                 'id_permintaan' => 'nullable|exists:permintaan_datas,id_permintaan',
                 'id_auditee' => 'nullable|integer|exists:users,id',
-                'tanggal_temuan' => 'required|date',
+                'tanggal_temuan' => 'required|date_format:Y-m-d',
                 'judul_temuan' => 'required|string',
                 'kondisi_sebenarnya' => 'required|string',
                 'keadaan_seharusnya' => 'required|string',
@@ -329,10 +345,8 @@ class TemuanController extends Controller
             $validated['id_auditor'] = $request->user()->id;
             $validated['status_temuan'] = 'Terbuka';
             
-            // PE users mapping: users dengan level_role yang sama
-            $peUserIds = [27, 44]; // ID user yang adalah PE
+            $peUserIds = [27, 44];
             
-            // Jika dari permintaan data, ambil level_role dari sana
             if (!empty($validated['id_permintaan'])) {
                 $permintaan = PermintaanData::find($validated['id_permintaan']);
                 if ($permintaan) {
@@ -340,8 +354,6 @@ class TemuanController extends Controller
                 }
             }
             
-            // Untuk PE users, tetap set level_role berdasarkan user mapping
-            // Sehingga data bisa difilter by id_auditee
             if (!empty($validated['id_auditee']) && in_array($validated['id_auditee'], $peUserIds)) {
                 $peMapping = [
                     44 => 'Kepatuhan',
@@ -349,7 +361,6 @@ class TemuanController extends Controller
                 ];
                 $validated['level_role'] = $peMapping[$validated['id_auditee']] ?? '';
             } elseif (!empty($validated['id_auditee'])) {
-                // Untuk non-PE users, ambil from user jika tidak ada permintaan
                 $auditee = User::find($validated['id_auditee']);
                 if ($auditee && empty($validated['level_role'])) {
                     $validated['level_role'] = $auditee->level_role;

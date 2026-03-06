@@ -135,7 +135,7 @@ const DireksiDashboard = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <StatCard
-              label="Total Permintaan Data"
+              label="Total Ikhtisar Temuan"
               value={permintaanData.length}
               color="text-purple-600"
               bgColor="bg-purple-100"
@@ -151,9 +151,9 @@ const DireksiDashboard = () => {
             />
 
             <StatCard
-              label="Temuan Tertinggi"
+              label="Temuan Terbanyak"
               value={topTerparah.count}
-              value2={topTerparah.tingkatParah}
+              value2={`Temuan tingkat ${topTerparah.tingkatParah}`}
               color={
                 topTerparah.tingkatParah === "Rendah" ? "text-blue-600" :
                   topTerparah.tingkatParah === "Sedang" ? "text-yellow-600" :

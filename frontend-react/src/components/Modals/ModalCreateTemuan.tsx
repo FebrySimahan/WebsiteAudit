@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
     Dialog,
     DialogContent,
@@ -49,6 +49,10 @@ const ModalCreateTemuan = ({
 }: ModalCreateTemuanProps) => {
     const [localPermintaanId, setLocalPermintaanId] = useState(formData.id_permintaan);
 
+    // Sinkronkan localPermintaanId dengan formData.id_permintaan
+    useEffect(() => {
+        setLocalPermintaanId(formData.id_permintaan);
+    }, [formData.id_permintaan]);
 
     const selectedPermintaan = useMemo(
         () => permintaanDataList?.find((p) => p.id_permintaan.toString() === localPermintaanId),
@@ -72,15 +76,31 @@ const ModalCreateTemuan = ({
 
     const tanggalOptions = useMemo(() => {
         if (!selectedPermintaan?.jadwal_audits?.length) return [];
-        return selectedPermintaan.jadwal_audits.map((jadwal: any) => ({
-            value: new Date(jadwal.tanggal_audit).toISOString().split("T")[0],
-            label: new Date(jadwal.tanggal_audit).toLocaleDateString("id-ID", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-            }),
-        }));
+
+        return selectedPermintaan.jadwal_audits
+            .map((jadwal: any) => {
+                let dateStr: string;
+
+                if (typeof jadwal.tanggal_audit === 'string') {
+                    dateStr = jadwal.tanggal_audit.split('T')[0];
+                } else if (jadwal.tanggal_audit instanceof Date) {
+                    const y = jadwal.tanggal_audit.getUTCFullYear();
+                    const m = String(jadwal.tanggal_audit.getUTCMonth() + 1).padStart(2, '0');
+                    const d = String(jadwal.tanggal_audit.getUTCDate()).padStart(2, '0');
+                    dateStr = `${y}-${m}-${d}`;
+                } else return null;
+
+                const [yr, mo, da] = dateStr.split('-');
+                const label = new Date(+yr, +mo - 1, +da).toLocaleDateString('id-ID', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                });
+
+                return { value: dateStr, label };
+            })
+            .filter((option: any): option is { value: string; label: string } => option !== null);
     }, [selectedPermintaan]);
 
 
@@ -143,9 +163,12 @@ const ModalCreateTemuan = ({
                                 placeholder="Pilih Tanggal Audit"
                             />
                         ) : (
-                            <DisplayField
+                            <InputField
                                 label="Tanggal Temuan"
-                                value=""
+                                type="date"
+                                value={formData.tanggal_temuan}
+                                onChange={updateField("tanggal_temuan")}
+                                placeholder="Pilih Tanggal Temuan"
                             />
                         )}
 
@@ -165,11 +188,11 @@ const ModalCreateTemuan = ({
                         />
 
                         <SelectField
-                            label="Permintaan Data"
+                            label="Ikhtisar Temuan"
                             value={localPermintaanId}
                             onChange={handlePermintaanChange}
                             options={permintaanOptions}
-                            placeholder="Pilih Permintaan"
+                            placeholder="Pilih Ikhtisar Temuan"
                         />
                     </div>
 

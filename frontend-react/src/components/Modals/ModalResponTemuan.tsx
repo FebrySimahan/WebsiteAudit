@@ -3,7 +3,6 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogDescription,
 } from "@/components/ui/dialog";
 import { DisplayField } from "@/components/ui/FormFields";
 import type { TemuanItem } from "@/services/temuanService";
@@ -33,9 +32,6 @@ const ModalResponTemuan = ({
             <DialogContent className="max-w-md">
                 <DialogHeader>
                     <DialogTitle>Tanggapi Temuan</DialogTitle>
-                    <DialogDescription>
-                        Terima atau tolak temuan yang telah diberikan oleh auditor.
-                    </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4">

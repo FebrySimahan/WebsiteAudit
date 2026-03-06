@@ -17,7 +17,7 @@ interface ModalVerifikasiTemuanProps {
     onVerifikasiReasonChange: (value: string) => void;
     onVerifikasiTerima: () => void;
     onVerifikasiTolak: () => void;
-    onUpdate: () => void; 
+    onUpdate: () => void;
     isLoading: boolean;
 }
 
@@ -30,7 +30,7 @@ const ModalVerifikasiTemuan = ({
     onVerifikasiReasonChange,
     onVerifikasiTerima,
     onVerifikasiTolak,
-    onUpdate,  
+    onUpdate,
     isLoading,
 }: ModalVerifikasiTemuanProps) => {
     if (!selectedTemuan) return null;
@@ -84,7 +84,7 @@ const ModalVerifikasiTemuan = ({
                                 {isLoading ? "Memproses..." : "Update"}
                             </button>
                         ) : (
-                           
+
                             <>
                                 <button
                                     onClick={onVerifikasiTerima}

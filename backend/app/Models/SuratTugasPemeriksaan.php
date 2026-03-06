@@ -24,8 +24,8 @@ class SuratTugasPemeriksaan extends Model
 
     
     protected $casts = [
-        'tanggal_mulai' => 'date',
-        'tanggal_selesai' => 'date',
+        'tanggal_mulai' => 'date:Y-m-d',
+        'tanggal_selesai' => 'date:Y-m-d',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

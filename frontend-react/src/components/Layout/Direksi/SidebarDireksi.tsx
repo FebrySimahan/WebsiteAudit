@@ -37,11 +37,11 @@ const Sidebar = ({ isOpen = true }: SidebarProps) => {
 
                 <NavLink
                     to="/direksi/permintaan-data"
-                    title="Permintaan Data"
+                    title="Ikhtisar Temuan"
                     className={`flex items-center justify-center gap-3 rounded-md 
                     hover:bg-blue-900 hover:text-white transition-colors text-sm md:text-lg ${isOpen ? "md:justify-start px-4 py-3" : "md:p-2"}`}>
                     <FileText className={`flex-shrink-0 ${isOpen ? "w-6 h-6" : "hidden md:inline w-6 h-6"}`} />
-                    {isOpen && <span className="hidden md:inline">Ikthisar Temuan</span>}
+                    {isOpen && <span className="hidden md:inline">Ikhtisar Temuan</span>}
                 </NavLink>
 
                 <NavLink

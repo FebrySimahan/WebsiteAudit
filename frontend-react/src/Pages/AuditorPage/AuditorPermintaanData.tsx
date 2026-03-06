@@ -49,6 +49,7 @@ const AuditorPermintaanData = () => {
     const [selectedItem, setSelectedItem] = useState<PermintaanDataItem | null>(null);
     const [selectedJadwalIds, setSelectedJadwalIds] = useState<number[]>([]);
     const [createLoading, setCreateLoading] = useState(false);
+    const [sendingIkhtisar, setSendingIkhtisar] = useState(false);
     const [formData, setFormData] = useState({
         id_surat: "",
         judul_permintaan: "",
@@ -194,7 +195,7 @@ const AuditorPermintaanData = () => {
             setError("");
         } catch (err: any) {
             console.error("Error:", err);
-            setError(err.response?.data?.message || "Gagal membuat permintaan data");
+            setError(err.response?.data?.message || "Gagal membuat ikhtisar temuan");
         } finally {
             setCreateLoading(false);
         }
@@ -230,6 +231,24 @@ const AuditorPermintaanData = () => {
         setSelectedJadwalIds(prev =>
             prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
         );
+    };
+
+    const handleSendIkhtisar = async (id?: number) => {
+        const targetId = id || selectedItem?.id_permintaan;
+        if (!targetId) return;
+        try {
+            setSendingIkhtisar(true);
+            await permintaanDataService.sendIkhtisar(targetId);
+
+            fetchPermintaanData();
+            setShowDetailModal(false);
+            alert("Ikhtisar berhasil dikirim!");
+        } catch (err: any) {
+            console.error("Gagal mengirim ikhtisar:", err);
+            alert("Gagal mengirim ikhtisar. Silakan coba lagi.");
+        } finally {
+            setSendingIkhtisar(false);
+        }
     };
 
 
@@ -319,7 +338,7 @@ const AuditorPermintaanData = () => {
                     <div className="space-y-3">
                         {permintaanData.length === 0 ? (
                             <div className="text-center py-8 text-gray-500">
-                                Tidak ada permintaan data
+                                Tidak ada ikhtisar temuan yang ditemukan.
                             </div>
                         ) : (
                             permintaanData.map((item) => (
@@ -354,6 +373,13 @@ const AuditorPermintaanData = () => {
                                                     }`}
                                             >
                                                 Selesaikan
+                                            </button>
+                                            <button
+                                                onClick={() => handleSendIkhtisar(item.id_permintaan)}
+                                                disabled={sendingIkhtisar || item.cek_verif === 1}
+                                                className="flex items-center gap-1 px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition text-xs font-medium disabled:bg-purple-400 disabled:cursor-not-allowed"
+                                            >
+                                                {sendingIkhtisar ? "Mengirim..." : "Kirim Ikhtisar"}
                                             </button>
                                             <button
                                                 onClick={() => {
@@ -469,7 +495,7 @@ const AuditorPermintaanData = () => {
             <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
                 <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>Buat Permintaan Data Baru</DialogTitle>
+                        <DialogTitle>Buat Ikhtisar Temuan Baru</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>
@@ -494,7 +520,7 @@ const AuditorPermintaanData = () => {
 
 
                         <div>
-                            <label className="block text-sm font-medium mb-1">Judul Ikthisar</label>
+                            <label className="block text-sm font-medium mb-1">Judul Ikhtisar</label>
                             <Input
                                 value={formData.judul_permintaan}
                                 onChange={(e) => setFormData({ ...formData, judul_permintaan: e.target.value })}
@@ -637,7 +663,7 @@ const AuditorPermintaanData = () => {
             <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
                 <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>Detail Permintaan Data</DialogTitle>
+                        <DialogTitle>Detail Ikhtisar Temuan</DialogTitle>
                     </DialogHeader>
                     {selectedItem && (
                         <div className="space-y-4">
@@ -690,6 +716,13 @@ const AuditorPermintaanData = () => {
                                     Print
                                 </Button>
                                 <Button
+                                    onClick={() => handleSendIkhtisar()}
+                                    disabled={sendingIkhtisar || selectedItem?.cek_verif === 1}
+                                    className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed"
+                                >
+                                    {sendingIkhtisar ? "Mengirim..." : selectedItem?.cek_verif === 1 ? "Sudah Dikirim" : "Kirim Ikhtisar"}
+                                </Button>
+                                <Button
                                     variant="outline"
                                     onClick={() => setShowDetailModal(false)}
                                 >
@@ -702,50 +735,61 @@ const AuditorPermintaanData = () => {
             </Dialog>
 
             <Dialog open={showPrintModal} onOpenChange={setShowPrintModal}>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>Pilih Tanggal Audit untuk Print</DialogTitle>
+                        <DialogTitle>Pilih Jadwal Audit untuk {selectedItem?.judul_permintaan}</DialogTitle>
                     </DialogHeader>
-                    {selectedItem && selectedItem.jadwal_audits && (
-                        <div className="space-y-4">
-                            <p className="text-sm text-gray-600">Pilih tanggal yang ingin disertakan dalam PDF:</p>
-                            <div className="space-y-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
-                                {selectedItem.jadwal_audits.map((jadwal) => (
-                                    <label key={jadwal.id_jadwal} className="flex items-center gap-3 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedJadwalIds.includes(jadwal.id_jadwal)}
-                                            onChange={() => toggleJadwalSelection(jadwal.id_jadwal)}
-                                            className="w-4 h-4"
-                                        />
-                                        <span className="text-sm">
-                                            {new Date(jadwal.tanggal_audit).toLocaleDateString('id-ID', {
-                                                weekday: 'long',
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric'
+
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                        {selectedItem?.jadwal_audits && selectedItem.jadwal_audits.length > 0 ? (
+                            selectedItem.jadwal_audits.map((jadwal, idx) => (
+                                <label
+                                    key={idx}
+                                    className="border rounded-lg p-4 hover:bg-gray-50 transition cursor-pointer flex items-center gap-3"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedJadwalIds.includes(jadwal.id_jadwal)}
+                                        onChange={() => toggleJadwalSelection(jadwal.id_jadwal)}
+                                        className="w-5 h-5 text-blue-600 rounded cursor-pointer"
+                                    />
+                                    <div className="flex-1">
+                                        <p className="font-semibold text-gray-800">
+                                            {new Date(jadwal.tanggal_audit).toLocaleDateString("id-ID", {
+                                                weekday: "long",
+                                                year: "numeric",
+                                                month: "long",
+                                                day: "numeric",
+                                                hour: "2-digit",
+                                                minute: "2-digit"
                                             })}
-                                        </span>
-                                    </label>
-                                ))}
-                            </div>
-                            <div className="flex gap-2 justify-end pt-4 border-t">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setShowPrintModal(false)}
-                                >
-                                    Batal
-                                </Button>
-                                <Button
-                                    onClick={handleGeneratePdf}
-                                    disabled={selectedJadwalIds.length === 0}
-                                    className="bg-green-600 hover:bg-green-700"
-                                >
-                                    Preview PDF
-                                </Button>
-                            </div>
-                        </div>
-                    )}
+                                        </p>
+                                        <p className="text-sm text-gray-600 mt-1">
+                                            Status: <span className="font-medium">{jadwal.status_jadwal}</span>
+                                        </p>
+                                    </div>
+                                </label>
+                            ))
+                        ) : (
+                            <p className="text-center text-gray-500 py-8">Tidak ada jadwal audit tersedia</p>
+                        )}
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-4 border-t">
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowPrintModal(false)}
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            onClick={handleGeneratePdf}
+                            disabled={selectedJadwalIds.length === 0}
+                            className="bg-blue-600 hover:bg-blue-700"
+                        >
+                            Preview ({selectedJadwalIds.length})
+                        </Button>
+                    </div>
                 </DialogContent>
             </Dialog>
 
@@ -753,7 +797,7 @@ const AuditorPermintaanData = () => {
             <Dialog open={showPdfPreview} onOpenChange={setShowPdfPreview}>
                 <DialogContent className="max-w-4xl max-h-[90vh]">
                     <DialogHeader>
-                        <DialogTitle>Preview PDF Permintaan Data</DialogTitle>
+                        <DialogTitle>Preview Ikhtisar Temuan</DialogTitle>
                     </DialogHeader>
                     {pdfBlob && (
                         <>

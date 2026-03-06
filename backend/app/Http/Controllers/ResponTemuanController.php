@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ResponTemuan;
 use App\Models\Temuan;
 use App\Models\PermintaanData;
+use App\Models\JadwalAudit;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
@@ -32,15 +33,35 @@ class ResponTemuanController extends Controller
                 
                 $temuan = Temuan::find($validated['id_temuan']);
                 if ($temuan && $temuan->id_permintaan) {
+                    // Update status permintaan dari Aktif/Berjalan menjadi Berjalan
                     PermintaanData::where('id_permintaan', $temuan->id_permintaan)
-                        ->where('status_permintaan', '!=', 'Selesai')
+                        ->whereIn('status_permintaan', ['Aktif', 'Berjalan'])
                         ->update(['status_permintaan' => 'Berjalan']);
                     
                 }
             } elseif ($validated['status_respon'] === 'Ditolak') {
                 Temuan::where('id_temuan', $validated['id_temuan'])
                     ->update(['status_temuan' => 'Selesai']);
-                   
+                
+                // Update jadwal audit status to Selesai (hanya jadwal dengan tanggal yang sama dengan tanggal temuan)
+                $temuan = Temuan::find($validated['id_temuan']);
+                if ($temuan && $temuan->id_permintaan && $temuan->tanggal_temuan) {
+                    // Konversi tanggal untuk perbandingan
+                    $tanggalTemuanString = $temuan->tanggal_temuan instanceof \DateTime 
+                        ? $temuan->tanggal_temuan->format('Y-m-d')
+                        : \Carbon\Carbon::parse($temuan->tanggal_temuan)->format('Y-m-d');
+                    
+                    $updated = JadwalAudit::where('id_permintaan', $temuan->id_permintaan)
+                        ->whereRaw("DATE_FORMAT(tanggal_audit, '%Y-%m-%d') = ?", [$tanggalTemuanString])
+                        ->update(['status_jadwal' => 'Selesai']);
+                    
+                    \Log::info('ResponTemuanController::create (Ditolak) - UPDATE JADWAL', [
+                        'id_temuan' => $temuan->id_temuan,
+                        'id_permintaan' => $temuan->id_permintaan,
+                        'tanggal_temuan' => $tanggalTemuanString,
+                        'rows_updated' => $updated
+                    ]);
+                }
             
                 // in case aja kalo misalnya data terakhir ditolak 
                 // (bakal diupdate jadi selesai) permintaan datanya auto selesai gitu

@@ -21,7 +21,7 @@ import {
 const AuditeeTemuan = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    
+
     // Get filter from URL search params or default to "all"
     const getInitialFilter = () => {
         const params = new URLSearchParams(location.search);
@@ -31,7 +31,7 @@ const AuditeeTemuan = () => {
         }
         return "all";
     };
-    
+
     const [temuanData, setTemuanData] = useState<TemuanItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");

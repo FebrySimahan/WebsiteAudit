@@ -32,6 +32,7 @@ export interface PermintaanDataItem {
     jenis_permintaan: string;
     status_permintaan: string;
     level_role: string;
+    cek_verif?: number;
     created_at?: string;
     updated_at?: string;
     auditor?: User;
@@ -76,10 +77,8 @@ const permintaanDataService = {
 
     getAll: async (): Promise<PermintaanDataItem[]> => {
         try {
-            const res = await api.get<PermintaanDataResponse>("/permintaan-data/show-all-paginated");
+            const res = await api.get<PermintaanDataResponse>("/permintaan-data/show-all-paginated?per_page=-1");
             const data = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
-            console.log("Permintaan Data Response:", data);
-            console.log("First item:", data[0]);
             return data;
         } catch (error) {
             throw error;
@@ -90,8 +89,6 @@ const permintaanDataService = {
         try {
             const res = await api.get<PermintaanDataResponse>("/permintaan-data/auditor-temuan");
             const data = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
-            console.log("Permintaan Data Response:", data);
-            console.log("First item:", data[0]);
             return data;
         } catch (error) {
             throw error;
@@ -115,8 +112,6 @@ const permintaanDataService = {
         try {
             const res = await api.get<PermintaanDataResponse>("/permintaan-data/status-aktif");
             const data = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
-            console.log("Permintaan Data Status Aktif Response:", data);
-            console.log("First item:", data[0]);
             return data;
         } catch (error) {
             throw error;
@@ -127,8 +122,6 @@ const permintaanDataService = {
         try {
             const res = await api.get<PermintaanDataResponse>("/permintaan-data/status-berjalan");
             const data = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
-            console.log("Permintaan Data Status Berjalan Response:", data);
-            console.log("First item:", data[0]);
             return data;
         } catch (error) {
             throw error;
@@ -139,8 +132,6 @@ const permintaanDataService = {
         try {
             const res = await api.get<PermintaanDataResponse>("/permintaan-data/status-selesai");
             const data = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
-            console.log("Permintaan Data Status Selesai Response:", data);
-            console.log("First item:", data[0]);
             return data;
         } catch (error) {
             throw error;
@@ -153,8 +144,6 @@ const permintaanDataService = {
                 params: { judul }
             });
             const data = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
-            console.log("Permintaan Data Search By Judul Response:", data);
-            console.log("First item:", data[0]);
             return data;
         } catch (error) {
             throw error;
@@ -257,10 +246,32 @@ const permintaanDataService = {
         }
     },
 
+    sendIkhtisar: async (id_permintaan: number): Promise<PermintaanDataResponse> => {
+        try {
+            const res = await api.post<PermintaanDataResponse>(`/permintaan-data/${id_permintaan}/send-ikhtisar`);
+            return res.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     getAuditees: async () => {
         try {
             const res = await api.get("/users/auditees");
             return res.data.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getAuditeeIkhtisarTemuan: async (page: number = 1, perPage: number = 5): Promise<PaginatedResponse> => {
+        try {
+            const res = await api.get<PaginatedResponse>(`/permintaan-data/auditee/ikhtisar?page=${page}&per_page=${perPage}`);
+            return {
+                success: res.data.success,
+                data: res.data.data,
+                pagination: res.data.pagination,
+            };
         } catch (error) {
             throw error;
         }

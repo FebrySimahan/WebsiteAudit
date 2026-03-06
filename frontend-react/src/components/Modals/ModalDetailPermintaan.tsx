@@ -23,12 +23,12 @@ const ModalDetailPermintaan = ({
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-2xl max-h-2xl">
                 <DialogHeader>
-                    <DialogTitle>Detail Permintaan : {permintaan.judul_permintaan}</DialogTitle>
+                    <DialogTitle>Detail Ikthisar Temuan : {permintaan.judul_permintaan}</DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-4">
                     <div>
-                        <h3 className="font-semibold text-gray-800 mb-3">Informasi Permintaan</h3>
+                        <h3 className="font-semibold text-gray-800 mb-3">Informasi Ikhtisar Temuan</h3>
                         <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
                                 <p className="text-gray-600">Divisi</p>

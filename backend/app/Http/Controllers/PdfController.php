@@ -55,18 +55,22 @@ class PdfController extends Controller
             })->toArray();
             
           
-            $temuanBerjadwal = Temuan::where('id_permintaan', $id)
-                ->whereIn('tanggal_temuan', $selectedDates)
-                ->get();
+            $filteredTemuans = Temuan::where('id_permintaan', $id)
+                ->whereIn(\DB::raw("DATE(tanggal_temuan)"), $selectedDates)
+                ->with([
+                    'auditee',
+                    'auditor',
+                    'responTemuans.tindakLanjuts.verifikasis'
+                ])
+                ->get()
+                ->values();
             
             $permintaan->jadwal_audits = $selectedJadwals;
-            $permintaan->temuan = $temuanBerjadwal;
-        } else {
-            $temuan = Temuan::where('id_permintaan', $id)->get();
-            $permintaan->temuan = $temuan;
+            $permintaan->temuans = $filteredTemuans;
         }
 
         $pdf = Pdf::loadView('pdf.permintaan', compact('permintaan', 'verifikasis'));
+        
         return $pdf->stream('permintaan-' . $id . '.pdf');
     }
 
@@ -86,6 +90,44 @@ class PdfController extends Controller
         $jadwalIds = $request->query('jadwal_ids');
         
         if ($jadwalIds) {
+            $jadwalIdsArray = is_array($jadwalIds) ? $jadwalIds : explode(',', trim($jadwalIds));
+            $jadwalIdsArray = array_map('intval', array_filter($jadwalIdsArray));
+            
+            $selectedJadwals = $permintaan->jadwal_audits->filter(function($jadwal) use ($jadwalIdsArray) {
+                return in_array($jadwal->id_jadwal, $jadwalIdsArray);
+            })->values();
+            
+            $selectedDates = $selectedJadwals->pluck('tanggal_audit')->map(function($date) {
+                return $date->format('Y-m-d');
+            })->toArray();
+            
+            // Query temuans dari database dengan tanggal yang cocok
+            $filteredTemuans = Temuan::where('id_permintaan', $id)
+                ->whereIn(\DB::raw("DATE(tanggal_temuan)"), $selectedDates)
+                ->get()
+                ->values();
+            
+            $permintaan->jadwal_audits = $selectedJadwals;
+            $permintaan->temuans = $filteredTemuans;
+        }
+
+        $pdf = Pdf::loadView('pdf.permintaan', compact('permintaan'));
+        return $pdf->stream('permintaan-' . $id . '.pdf');
+    }
+
+    public function previewPermintaanDataAuditee($id, Request $request)
+    {
+        $user = auth()->user();
+        $permintaan = PermintaanData::with(['auditor', 'auditee', 'jadwal_audits', 'temuans', 'temuans.responTemuans.tindakLanjuts'])
+            ->where('id_permintaan', $id)
+            ->where('level_role', $user->level_role)
+            ->where('cek_verif', 1)
+            ->firstOrFail();
+
+        $jadwalIds = $request->query('jadwal_ids');
+        $auditeeList = $request->query('auditee_list') ? explode('|', $request->query('auditee_list')) : [];
+        
+        if ($jadwalIds) {
             $jadwalIdsArray = is_array($jadwalIds) ? $jadwalIds : explode(',', $jadwalIds);
             $jadwalIdsArray = array_map('intval', array_filter($jadwalIdsArray));
             
@@ -93,22 +135,83 @@ class PdfController extends Controller
                 return in_array($jadwal->id_jadwal, $jadwalIdsArray);
             })->values();
             
-            $selectedDates = $selectedJadwals->map(function($jadwal) {
-                return $jadwal->tanggal_audit->format('Y-m-d');
+            $selectedDates = $selectedJadwals->pluck('tanggal_audit')->map(function($date) {
+                return $date->format('Y-m-d');
             })->toArray();
             
-            $temuanBerjadwal = Temuan::where('id_permintaan', $id)
-                ->whereIn('tanggal_temuan', $selectedDates)
-                ->get();
+            // Query temuans dari database dengan tanggal yang cocok
+            $filteredTemuans = Temuan::where('id_permintaan', $id)
+                ->whereIn(\DB::raw("DATE(tanggal_temuan)"), $selectedDates)
+                ->with([
+                    'responTemuans.tindakLanjuts'
+                ])
+                ->get()
+                ->values();
             
             $permintaan->jadwal_audits = $selectedJadwals;
-            $permintaan->temuan = $temuanBerjadwal;
-        } else {
-            $temuan = Temuan::where('id_permintaan', $id)->get();
-            $permintaan->temuan = $temuan;
+            $permintaan->temuans = $filteredTemuans;
         }
 
-        $pdf = Pdf::loadView('pdf.permintaan', compact('permintaan'));
+        $pdf = Pdf::loadView('pdf.permintaan', compact('permintaan', 'auditeeList'));
+        return $pdf->stream('permintaan-' . $id . '.pdf');
+    }
+
+    public function generatePermintaanDataAuditee($id, Request $request)
+    {
+        $user = auth()->user();
+        $permintaan = PermintaanData::with([
+            'auditor',
+            'auditee',
+            'jadwal_audits',
+            'temuans.auditee',
+            'temuans.auditor',
+            'temuans.responTemuans.tindakLanjuts.verifikasis',
+        ])
+        ->where('id_permintaan', $id)
+        ->where('level_role', $user->level_role)
+        ->where('cek_verif', 1)
+        ->firstOrFail();
+
+        $auditeeList = $request->query('auditee_list') ? explode('|', $request->query('auditee_list')) : [];
+        $jadwalIds = $request->query('jadwal_ids');
+
+        if ($jadwalIds) {
+            $jadwalIdsArray = is_array($jadwalIds) ? $jadwalIds : explode(',', trim($jadwalIds));
+            $jadwalIdsArray = array_map('intval', array_filter($jadwalIdsArray));
+            
+            $selectedJadwals = $permintaan->jadwal_audits->filter(function($jadwal) use ($jadwalIdsArray) {
+                return in_array($jadwal->id_jadwal, $jadwalIdsArray);
+            })->values();
+            
+            $selectedDates = $selectedJadwals->pluck('tanggal_audit')->map(function($date) {
+                return $date->format('Y-m-d');
+            })->toArray();
+            
+            $filteredTemuans = Temuan::where('id_permintaan', $id)
+                ->whereIn(\DB::raw("DATE(tanggal_temuan)"), $selectedDates)
+                ->with([
+                    'auditee',
+                    'auditor',
+                    'responTemuans.tindakLanjuts.verifikasi'
+                ])
+                ->get()
+                ->values();
+            
+            $permintaan->jadwal_audits = $selectedJadwals;
+            $permintaan->temuans = $filteredTemuans;
+        }
+
+        $temuans = $permintaan->temuans ?? collect();
+
+        $verifikasis = $temuans->flatMap(function ($temuan) {
+            return $temuan->responTemuans->flatMap(function ($respon) {
+                return $respon->tindakLanjuts->flatMap(function ($tindak) {
+                    return $tindak->verifikasis ?? collect();
+                });
+            });
+        })->flatten(1)->values();
+        
+        $pdf = Pdf::loadView('pdf.permintaan', compact('permintaan', 'verifikasis', 'auditeeList'));
         return $pdf->stream('permintaan-' . $id . '.pdf');
     }
 

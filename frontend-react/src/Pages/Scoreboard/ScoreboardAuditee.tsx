@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import AuditeeLayout from "@/components/Layout/Auditee/AuditeeLayout";
 import scoreboardService from "@/services/scoreboardService";
 import type { ScoreboardItem } from "@/services/scoreboardService";
+import { authUtils } from "@/services/api";
 import {
     Dialog,
     DialogContent,
@@ -10,16 +11,74 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 
+// Mapping dari level_role ke divisi scoreboard
+const ROLE_MAPPING = {
+    'KTI': 'Kepala Teknologi Informasi',
+    'KSO': 'Operational',
+    'KBO': 'Operational',
+    'KSA': 'Operational',
+    'KBL': 'Lending',
+    'KSL': 'Lending',
+    'TLU': 'Lending',
+    'KSR': 'Lending',
+    'TLM': 'Lending',
+    'KBF': 'Funding',
+    'KSF': 'Funding',
+    'Kepatuhan': 'Kepatuhan',
+    'Manajemen Resiko': 'Manajemen Resiko',
+    'PE': 'PE',
+};
+
+// PE user ID mapping ke divisi
+const PE_ID_MAPPING: { [key: number]: string } = {
+    44: 'Kepatuhan',      // ID 44 = PE Kepatuhan
+    27: 'Manajemen Resiko', // ID 27 = PE Manajemen Resiko
+    39: 'Unknown',        // ID 39 = PE (no mapping yet)
+};
+
 const ScoreboardAuditee = () => {
     const [scoreboard, setScoreboard] = useState<ScoreboardItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [selectedRole, setSelectedRole] = useState<ScoreboardItem | null>(null);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [currentUser, setCurrentUser] = useState<any>(null);
 
     useEffect(() => {
         fetchScoreboard();
+        getCurrentUser();
     }, []);
+
+    const getCurrentUser = async () => {
+        try {
+            const user = await authUtils.getUser();
+            if (user) {
+                console.log("Current user:", user);
+                setCurrentUser(user);
+            }
+        } catch (err) {
+            console.error("Gagal mengambil data user:", err);
+        }
+    };
+
+    const canViewDetail = (scoreboardRole: string): boolean => {
+        if (!currentUser) return false;
+        
+        const userLevel = currentUser.level_role;
+        
+        // Check jika user adalah PE berdasarkan ID
+        if (userLevel === 'PE' && currentUser.id in PE_ID_MAPPING) {
+            const peAssignedRole = PE_ID_MAPPING[currentUser.id];
+            console.log(`PE user ID ${currentUser.id} mapped to ${peAssignedRole}, comparing with ${scoreboardRole}`);
+            return peAssignedRole === scoreboardRole;
+        }
+        
+        // Check berdasarkan level_role mapping untuk user biasa
+        const mappedUserRole = ROLE_MAPPING[userLevel as keyof typeof ROLE_MAPPING] || userLevel;
+        console.log(`Comparing user role ${userLevel} mapped to ${mappedUserRole} with scoreboard ${scoreboardRole}`);
+        
+        return mappedUserRole === scoreboardRole;
+    };
 
     const fetchScoreboard = async () => {
         try {
@@ -27,8 +86,10 @@ const ScoreboardAuditee = () => {
             setError("");
 
             const data = await scoreboardService.getScoreboard();
+            console.log("Scoreboard data:", data);
             setScoreboard(data);
         } catch (err: any) {
+            console.error("Error fetching scoreboard:", err);
             setError(err.response?.data?.message || "Gagal memuat scoreboard");
         } finally {
             setLoading(false);
@@ -114,7 +175,12 @@ const ScoreboardAuditee = () => {
                                                 setSelectedRole(item);
                                                 setShowDetailsModal(true);
                                             }}
-                                            className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-medium text-xs sm:text-sm w-full sm:w-auto"
+                                            disabled={!canViewDetail(item.level_role)}
+                                            className={`px-3 sm:px-4 py-2 rounded hover:transition font-medium text-xs sm:text-sm w-full sm:w-auto ${
+                                                canViewDetail(item.level_role)
+                                                    ? "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                                                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                            }`}
                                         >
                                             Detail
                                         </button>

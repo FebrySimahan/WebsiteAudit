@@ -17,6 +17,12 @@ class Verifikasi extends Model
         'tanggal_verifikasi',
     ];
 
+    protected $casts = [
+        'tanggal_verifikasi' => 'date:Y-m-d',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
     public function tindakLanjut(): BelongsTo
     {
         return $this->belongsTo(TindakLanjut::class, 'id_tindak_lanjut', 'id_tindak_lanjut');

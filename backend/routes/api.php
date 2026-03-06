@@ -31,6 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/create-temuan', [TemuanController::class, 'createTemuan']);           
         Route::get('/{id}/pdf', [PdfController::class, 'generateTemuan']);
         Route::get('/count-by-status', [TemuanController::class, 'countByStatus']);
+        Route::post('/{id}/finalize', [VerifikasiController::class, 'finalizeTemuan']);
     });
     
     Route::prefix('respon-temuans')->group(function () {
@@ -63,26 +64,31 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/show-all-paginated', [PermintaanDataController::class, 'index']);         
         Route::get('/show-all-dropdown', [PermintaanDataController::class, 'indexDropdown']);         
         
-        
-        
-        // punya auditor 
-        Route::get('/auditor', [PermintaanDataController::class, 'index']);
-        Route::get('/auditor-temuan', [PermintaanDataController::class, 'indexByAuditorTemuan']);
+        // punya auditor - spesifik path dulu
         Route::get('/auditor/search', [PermintaanDataController::class, 'searchByJudulAuditor']);
         Route::get('/auditor/filter-status', [PermintaanDataController::class, 'filterByStatus']);
+        Route::get('/auditor-temuan', [PermintaanDataController::class, 'indexByAuditorTemuan']);
+        Route::post('/auditor/create', [PermintaanDataController::class, 'createPermintaanData']);
+        Route::get('/auditor', [PermintaanDataController::class, 'index']);
         Route::get('/auditor/{id}/pdf-preview', [PdfController::class, 'previewPermintaanDataAuditor']);
         Route::get('/auditor/{id}/pdf', [PdfController::class, 'generatePermintaanData']);
-        Route::post('/auditor/create', [PermintaanDataController::class, 'createPermintaanData']);
-        Route::post('/{id}/set-selesai', [PermintaanDataController::class, 'setSelesai']);
+         Route::post('/{id}/set-selesai', [PermintaanDataController::class, 'setSelesai']);
+        Route::post('/{id}/send-ikhtisar', [PermintaanDataController::class, 'sendIkhtisar']);
 
+        // punya auditee - spesifik path dulu
+        Route::get('/auditee/ikhtisar', [PermintaanDataController::class, 'auditeeIkhtisarTemuan']);
+        Route::get('/auditee/{id}/pdf-preview', [PdfController::class, 'previewPermintaanDataAuditee']);
+        Route::get('/auditee/{id}/pdf', [PdfController::class, 'generatePermintaanDataAuditee']);
 
-        // punya direksi
-        Route::get('/direksi/filter-status', [PermintaanDataController::class, 'filterByStatus']);
+        // punya direksiss
         Route::get('/search', [PermintaanDataController::class, 'searchByJudul']);          
+        Route::get('/direksi/filter-status', [PermintaanDataController::class, 'filterByStatus']);
         Route::get('/status-aktif', [PermintaanDataController::class, 'statusAktif']);
         Route::get('/status-berjalan', [PermintaanDataController::class, 'statusBerjalan']);
         Route::get('/status-selesai', [PermintaanDataController::class, 'statusSelesai']);
         Route::get('/{id}/pdf', [PdfController::class, 'generatePermintaanData']);
+        
+    
     });
 
 

@@ -1,6 +1,6 @@
 import { Separator } from "@/components/ui/separator";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, FolderSearch, ChartBar } from "lucide-react";
+import { LayoutDashboard, FolderSearch, ChartBar, FileText } from "lucide-react";
 
 interface SidebarAuditeeProps {
     isOpen?: boolean;
@@ -42,6 +42,15 @@ const SidebarAuditee = ({ isOpen = true }: SidebarAuditeeProps) => {
                     hover:bg-blue-900 hover:text-white transition-colors text-sm md:text-lg ${isOpen ? "md:justify-start px-4 py-3" : "md:p-2"}`}>
                     <FolderSearch className={`flex-shrink-0 ${isOpen ? "w-6 h-6" : "hidden md:inline w-6 h-6"}`} />
                     {isOpen && <span className="hidden md:inline">Temuan</span>}
+                </NavLink>
+
+                <NavLink
+                    to="/auditee/ikhtisar-temuan"
+                    title="Ikhtisar Temuan"
+                    className={`flex items-center justify-center gap-3 rounded-md 
+                    hover:bg-blue-900 hover:text-white transition-colors text-sm md:text-lg ${isOpen ? "md:justify-start px-4 py-3" : "md:p-2"}`}>
+                    <FileText className={`flex-shrink-0 ${isOpen ? "w-6 h-6" : "hidden md:inline w-6 h-6"}`} />
+                    {isOpen && <span className="hidden md:inline">Ikhtisar Temuan</span>}
                 </NavLink>
 
                 <NavLink

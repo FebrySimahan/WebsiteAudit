@@ -16,6 +16,12 @@ class ResponTemuan extends Model
         'tanggal_respon',
     ];
 
+    protected $casts = [
+        'tanggal_respon' => 'date:Y-m-d',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
     public function temuan(): BelongsTo
     {
         return $this->belongsTo(Temuan::class, 'id_temuan', 'id_temuan');

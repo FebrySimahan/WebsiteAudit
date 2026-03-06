@@ -25,6 +25,24 @@ class PdfService {
         return response.data;
     }
 
+    async getPermintaanDataAuditeePdf(id: number, jadwalIds?: number[], auditeeList?: string[]): Promise<Blob> {
+        const params: any = {};
+
+        if (jadwalIds && jadwalIds.length > 0) {
+            params.jadwal_ids = jadwalIds.join(',');
+        }
+
+        if (auditeeList && auditeeList.length > 0) {
+            params.auditee_list = auditeeList.join('|');
+        }
+
+        const response = await api.get(`/permintaan-data/auditee/${id}/pdf`, {
+            params,
+            responseType: 'blob'
+        });
+        return response.data;
+    }
+
     async getTemuanPdf(id: number): Promise<Blob> {
         const response = await api.get(`/temuan/${id}/pdf`, {
             responseType: 'blob'

@@ -119,8 +119,7 @@
         \Carbon\Carbon::setLocale('id');
     @endphp
     <div class="no-surat">
-        Nomor : {{ sprintf('%03d', $suratTugas->id_surat) }}/AI/DIR-MSA/{{ strtoupper(\Carbon\Carbon::now()->translatedFormat('m')) }}/{{ date('Y') }}
-    </div>
+Nomor : {{ sprintf('%03d', $permintaan->surat->id_surat ?? 0) }}/AI/DIR-MSA/{{ ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][now()->month - 1] }}/{{ date('Y') }}    </div>
 
     <div class="field" style="display: block;">
         <p style="text-align: left;">Direksi PT BPR Madani Sejahtera Abadi, menugaskan Tim Audit :</p>
@@ -162,17 +161,17 @@
         <br>
         <br>
         <br>
-        <p style="text-decoration: underline;"><strong>Y Triagung Pujiantoro, SE</strong></p>
-        <p>Direktur Utama</p>
+        <p style="text-decoration: underline; margin-bottom: 5px;"><strong>Y Triagung Pujiantoro, SE</strong></p>
+        <p style="margin-top: 5px;">Direktur Utama</p>
     </div>
 
     <div class="page-break"></div>
     
-    <h3 style="text-align: center;">PERMINTAAN DATA</h3>
+    <h3 style="text-align: center;">Ikthisar Temuan</h3>
     
     <div class="field" style="display: block;">
         <p style="margin: 10px 0; text-align: justify;">
-            Berdasarkan Surat Tugas Nomor : {{ sprintf('%03d', $suratTugas->id_surat) }}/AI/DIR-MSA/{{ strtoupper(\Carbon\Carbon::now()->translatedFormat('m')) }}/{{ date('Y') }}
+            Berdasarkan Surat Tugas Nomor : {{ sprintf('%03d', $permintaan->surat->id_surat ?? 0) }}/AI/DIR-MSA/{{ ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][now()->month - 1] }}/{{ date('Y') }}
             , bersama ini kami memohon untuk disiapkan data sebagai berikut :
         </p>
     </div>

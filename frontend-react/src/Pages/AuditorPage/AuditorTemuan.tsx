@@ -13,7 +13,7 @@ import {
     PaginationPrevious,
     PaginationEllipsis,
 } from "@/components/ui/pagination";
-import { Eye, Pencil } from "lucide-react";
+import { Eye, Pencil, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ModalDetailTemuan from "@/components/Modals/ModalDetailTemuan";
@@ -43,6 +43,10 @@ const AuditorTemuan = () => {
     const [verifikasiReason, setVerifikasiReason] = useState("");
     const [verifikasiLoading, setVerifikasiLoading] = useState(false);
 
+    const [showFinalizeModal, setShowFinalizeModal] = useState(false);
+    const [selectedTemuanForFinalize, setSelectedTemuanForFinalize] = useState<TemuanItem | null>(null);
+    const [finalizeLoading, setFinalizeLoading] = useState(false);
+
     const [formData, setFormData] = useState({
         id_permintaan: "",
         level_role: "",
@@ -63,10 +67,12 @@ const AuditorTemuan = () => {
             setError("");
             if (filterStatus === 'all') {
                 const result = await temuanService.getAllPaginated(currentPage, perPage);
+                console.log("Temuan data:", result.data);
                 setTemuan(result.data);
                 setPagination(result.pagination);
             } else {
                 const result = await temuanService.filterByStatus(filterStatus ?? "all", currentPage, perPage);
+                console.log("Filtered temuan data:", result.data);
                 setTemuan(result.data);
                 setPagination(result.pagination);
             }
@@ -242,6 +248,23 @@ const AuditorTemuan = () => {
         }
     };
 
+    const handleFinalize = async () => {
+        if (!selectedTemuanForFinalize) return;
+        try {
+            setFinalizeLoading(true);
+            await temuanService.finalizeTemuan(selectedTemuanForFinalize.id_temuan);
+            await fetchTemuan();
+            setShowFinalizeModal(false);
+            setSelectedTemuanForFinalize(null);
+            setError("");
+        } catch (err: any) {
+            setError(err.response?.data?.message || "Gagal menyelesaikan temuan");
+            console.error("Error:", err);
+        } finally {
+            setFinalizeLoading(false);
+        }
+    };
+
     const location = useLocation();
     const [isFilterInitialized, setIsFilterInitialized] = useState(false);
 
@@ -405,7 +428,7 @@ const AuditorTemuan = () => {
                                             </span>
                                         </div>
 
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-2 flex-wrap">
                                             <button
                                                 onClick={() => {
                                                     setSelectedItem(item);
@@ -417,32 +440,27 @@ const AuditorTemuan = () => {
                                                 Detail
                                             </button>
                                             {item.status_temuan === "Menunggu Verifikasi" && (
-                                                <button
-                                                    onClick={() => handleVerifikasiClick(item)}
-                                                    disabled={verifikasiLoading}
-                                                    className="flex items-center gap-1 px-2 py-1 bg-purple-600 text-white rounded text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                                                >
-                                                    {verifikasiLoading ? "Memuat..." : "Verifikasi"}
-                                                </button>
-                                            )}
-                                            {item.verifikasi?.status_verifikasi === "Diterima" && (
-
-
-                                                <div className="flex justify-between items-center">
+                                                <>
                                                     <button
-                                                        className="flex items-center gap-1 px-2 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition text-xs font-medium whitespace-nowrap"
-                                                        onClick={() => {
-                                                            setSelectedTemuanForVerifikasi(item);
-                                                            setVerifikasiReason(item.verifikasi?.catatan || "");
-                                                            setShowVerifikasiModal(true);
-                                                        }}
-
+                                                        onClick={() => handleVerifikasiClick(item)}
                                                         disabled={verifikasiLoading}
+                                                        className="flex items-center gap-1 px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 transition text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                                                     >
                                                         <Pencil size={12} />
-                                                        Update
+                                                        {verifikasiLoading ? "Memuat..." : "Verifikasi"}
                                                     </button>
-                                                </div>
+                                                    <button
+                                                        className="flex items-center gap-1 px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                                        onClick={() => {
+                                                            setSelectedTemuanForFinalize(item);
+                                                            setShowFinalizeModal(true);
+                                                        }}
+                                                        disabled={finalizeLoading}
+                                                    >
+                                                        <CheckCircle size={12} />
+                                                        Selesai
+                                                    </button>
+                                                </>
                                             )}
                                         </div>
                                     </div>
@@ -460,7 +478,7 @@ const AuditorTemuan = () => {
                     </div>
                 )}
 
-                {filterStatus === "all" && pagination && pagination.last_page > 1 && !loading && (
+                {pagination && pagination.last_page > 1 && !loading && (
                     <div className="mt-6 flex flex-col items-center gap-2">
                         <Pagination>
                             <PaginationContent>
@@ -578,6 +596,40 @@ const AuditorTemuan = () => {
                     onUpdate={handleDoUpdate}  // tambah ini
                     isLoading={verifikasiLoading}
                 />
+
+                {/* Modal Finalize Temuan */}
+                {showFinalizeModal && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+                            <h2 className="text-lg font-bold mb-4 text-gray-800">Selesaikan Temuan</h2>
+                            <p className="text-sm text-gray-600 mb-6">
+                                Apakah Anda yakin ingin menyelesaikan temuan "{selectedTemuanForFinalize?.judul_temuan}"?
+                                <br />
+                                <br />
+                                Status temuan akan berubah menjadi "Selesai".
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowFinalizeModal(false);
+                                        setSelectedTemuanForFinalize(null);
+                                    }}
+                                    disabled={finalizeLoading}
+                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    onClick={handleFinalize}
+                                    disabled={finalizeLoading}
+                                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                                >
+                                    {finalizeLoading ? "Memproses..." : "Selesaikan"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </AuditorLayout >
     );
