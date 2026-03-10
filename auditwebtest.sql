@@ -1,0 +1,504 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.2
+-- https://www.phpmyadmin.net/
+--
+-- Host: localhost:3306
+-- Generation Time: Mar 10, 2026 at 08:48 AM
+-- Server version: 8.4.3
+-- PHP Version: 8.3.26
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `auditwebtest`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `jadwal_audits`
+--
+
+CREATE TABLE `jadwal_audits` (
+  `id_jadwal` bigint UNSIGNED NOT NULL,
+  `id_permintaan` bigint UNSIGNED NOT NULL,
+  `tanggal_audit` date NOT NULL,
+  `status_jadwal` enum('Belum','Selesai') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Belum',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `migrations`
+--
+
+CREATE TABLE `migrations` (
+  `id` int UNSIGNED NOT NULL,
+  `migration` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `batch` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `migrations`
+--
+
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
+(12, '0001_01_01_000000_recreate_users_table_custom', 1),
+(13, '0001_01_01_000001_create_cache_table', 1),
+(14, '0001_01_01_000002_create_jobs_table', 1),
+(15, '2026_01_07_013847_create_personal_access_tokens_table', 1),
+(16, '2026_01_08_023312_create_surat_tugas_pemeriksaans_table', 1),
+(17, '2026_01_08_032604_create_permintaan_datas_table', 1),
+(18, '2026_01_13_025904_create_jadwal_audits_table', 1),
+(19, '2026_01_13_063600_create_temuans_table', 1),
+(20, '2026_01_13_071745_create_respon_temuans_table', 1),
+(21, '2026_01_13_074154_create_tindak_lanjuts_table', 1),
+(22, '2026_01_13_082924_create_verifikasis_table', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `permintaan_datas`
+--
+
+CREATE TABLE `permintaan_datas` (
+  `id_permintaan` bigint UNSIGNED NOT NULL,
+  `id_surat` bigint UNSIGNED NOT NULL,
+  `id_auditor` bigint UNSIGNED NOT NULL,
+  `id_auditee` bigint UNSIGNED DEFAULT NULL,
+  `level_role` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `judul_permintaan` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `deskripsi` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `divisi` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `jenis_permintaan` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `status_permintaan` enum('Aktif','Berjalan','Selesai') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Aktif',
+  `cek_verif` tinyint(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `personal_access_tokens`
+--
+
+CREATE TABLE `personal_access_tokens` (
+  `id` bigint UNSIGNED NOT NULL,
+  `tokenable_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tokenable_id` bigint UNSIGNED NOT NULL,
+  `name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `token` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `abilities` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `last_used_at` timestamp NULL DEFAULT NULL,
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `respon_temuans`
+--
+
+CREATE TABLE `respon_temuans` (
+  `id_respon` bigint UNSIGNED NOT NULL,
+  `id_temuan` bigint UNSIGNED NOT NULL,
+  `id_auditee` bigint UNSIGNED NOT NULL,
+  `status_respon` enum('Diterima','Ditolak') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tanggal_respon` date NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `surat_tugas_pemeriksaans`
+--
+
+CREATE TABLE `surat_tugas_pemeriksaans` (
+  `id_surat` bigint UNSIGNED NOT NULL,
+  `id_auditor` bigint UNSIGNED NOT NULL,
+  `unit_kerja` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tujuan_audit` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `deskripsi_permintaan` varchar(600) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tanggal_mulai` date NOT NULL,
+  `tanggal_selesai` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `temuans`
+--
+
+CREATE TABLE `temuans` (
+  `id_temuan` bigint UNSIGNED NOT NULL,
+  `id_permintaan` bigint UNSIGNED NOT NULL,
+  `id_auditor` bigint UNSIGNED DEFAULT NULL,
+  `id_auditee` bigint UNSIGNED DEFAULT NULL,
+  `level_role` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tanggal_temuan` date NOT NULL,
+  `judul_temuan` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `kondisi_sebenarnya` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `keadaan_seharusnya` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `penyebab` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `dampak` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `rekomendasi` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tingkat_keparahan` enum('Rendah','Sedang','Tinggi') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Sedang',
+  `status_temuan` enum('Terbuka','Menunggu Tindaklanjut','Menunggu Verifikasi','Selesai') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Terbuka',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tindak_lanjuts`
+--
+
+CREATE TABLE `tindak_lanjuts` (
+  `id_tindak_lanjut` bigint UNSIGNED NOT NULL,
+  `id_respon` bigint UNSIGNED NOT NULL,
+  `id_auditee` bigint UNSIGNED NOT NULL,
+  `deskripsi_tindak_lanjut` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `deskripsi_komitmen` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('Proses','Selesai') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Proses',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `id` bigint UNSIGNED NOT NULL,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `employee_code` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `wa_number` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email_verified_at` timestamp NULL DEFAULT NULL,
+  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `level` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'STAFF',
+  `level_role` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `remember_token` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`id`, `name`, `email`, `employee_code`, `wa_number`, `email_verified_at`, `password`, `level`, `level_role`, `remember_token`, `created_at`, `updated_at`) VALUES
+(1, 'Inta', 'intaelazzam@gmail.com', '000021', '6281568401122', '2025-10-04 23:37:04', '$2y$12$PPO.07lhM.aHTsCcGeVmweUx3MKyjdR.qWxf/s8bwlPzFEMdhz1Ye', 'KTI', 'KTI', NULL, '2025-09-30 03:43:40', '2025-12-28 11:23:02'),
+(2, 'Agung', 'ytriagungpujiantoro@gmail.com', '000001', '62818639863', '2025-10-05 00:06:15', '$2y$12$y6p6JJ3LG.OHykc019cOxeGQNEx1sCnXaqu3tRyIo2ksGsnTe1wLG', 'DIR', 'DIREKSI', NULL, '2025-09-30 03:43:40', '2025-12-28 11:23:02'),
+(3, 'Robby', 'robbymsadigital@gmail.com', NULL, '6288238369438', '2025-10-04 23:37:04', '$2y$12$.D/NBoS4JoZn1BpM55Cy8OKSSRR4bfOr7d/6H1QUJtnE6eJXkZ8bG', 'TI', 'TI', 'C5Mu6Fnu7zF38Ghf7PxwPfLGNicEJ2ZP8skUJBzXpE1ReAgi0OfEZLM4MJcW', '2025-09-30 03:43:41', '2025-12-28 11:23:02'),
+(4, 'Nz', 'muhammadnuzril2325@gmail.com', NULL, '6285975202828', '2025-10-04 23:37:04', '$2y$12$3Ep8S42K4lpveapfKX5eA.GLOcdj2Lo1lNO6U7ckjDB/BT0LHRKL2', 'TI', 'TI', NULL, '2025-09-30 03:43:41', '2025-12-28 11:23:02'),
+(5, 'Lisa', 'lisakencanasari@gmail.com', NULL, '6288238369438', '2025-10-05 00:06:14', '$2y$12$oimwyzA5pYtxO511Aj7G2.vo31pnfGJZUcXUzubEFAXtVU1n1IP/u', 'DIR', 'DIREKSI', NULL, '2025-10-04 23:57:31', '2025-12-28 11:23:02'),
+(6, 'Firdaus', 'sadatrader@gmail.com', '000014', NULL, '2025-10-05 00:06:14', '$2y$12$Ju9A1fZCrRJDR8IQHPNxhOncoEO1DWiPwZO61.l3w2m8jaWYAbfIK', 'BE', 'BE', NULL, '2025-10-04 23:57:31', '2025-12-28 11:23:02'),
+(7, 'Rukma', 'rukmabuntara16@gmail.com', '000039', NULL, '2025-10-05 00:06:14', '$2y$12$E1PunGsgW2cURKNmF19/6.YvzWnrse.NV1kXG0I/UkIRGKDEM18gS', 'AO', 'AO', NULL, '2025-10-04 23:57:31', '2025-12-28 11:23:02'),
+(8, 'Endah', 'endahaluna@gmail.com', '000010', '6281221497051', '2025-10-05 00:06:14', '$2y$12$PcUlilCN/51znZu6nZlCa.2ztlSrLe2ODGmMu72h3Ohdd.NOe8/uG', 'KSF', 'KSF', NULL, '2025-10-04 23:57:32', '2025-12-28 11:23:02'),
+(9, 'Hestu', 'kurniawan.hestu@gmail.com', '000077', NULL, '2025-10-05 00:06:14', '$2y$12$T4DkQo1uyVa3jBAQEINT3.PCiNqpfzIMIzW0i92BFnNJkfAiqTHKS', 'FE', 'FE', NULL, '2025-10-04 23:57:32', '2025-12-28 11:23:02'),
+(10, 'Yoga', 'prayogaadhi2@gmail.com', '000031', '6281225111030', '2025-10-05 00:06:14', '$2y$12$9apv82jggcb5OsZH8SVqS.0qFIJEXgcuhtRMGsm/qeHhRLE84twRe', 'TLL', 'TLL', NULL, '2025-10-04 23:57:32', '2025-12-28 11:23:02'),
+(11, 'Disa', 'varadisanadia@gmail.com', '000002', '6281225405777', '2025-10-05 00:06:14', '$2y$12$mJJj/WEwvAQbSbVaC497Jul144sjsMSRsaNVrXrgULHRnytOVErom', 'TLF', 'TLF', NULL, '2025-10-04 23:57:33', '2025-12-28 11:23:02'),
+(12, 'Bartino', 'bobbendot@gmail.com', '000004', NULL, '2025-10-05 00:06:14', '$2y$12$torDGIBXooQ92zPVn3hFIejsj5LvzTTx4gcW6PtZwJ4FaJJeeIu4C', 'AO', 'AO', NULL, '2025-10-04 23:57:33', '2025-12-28 11:23:02'),
+(13, 'Hari', 'hari_purwowidodo@yahoo.co.id', NULL, NULL, '2025-10-05 00:06:14', '$2y$12$ajFBm.bOs6RRGzQCzNlEpuHr4GaxbN/2ZU98sX0y7G0c033Kb1cBi', 'KOM', 'KOM', NULL, '2025-10-04 23:57:33', '2025-12-28 11:23:02'),
+(14, 'Dewi', 'veradewi66@gmail.com', '000074', '6281326806556', '2025-10-05 00:06:14', '$2y$12$qecw2ETZowPWEZwpygAiaeUPzUe76huC.fr/8fqk4hhx95OMrTtXK', 'AO', 'AO', NULL, '2025-10-04 23:57:33', '2025-12-28 11:23:02'),
+(15, 'Fery', 'cicurug1sukabumi@gmail.com', NULL, NULL, '2025-10-05 00:06:14', '$2y$12$r3.MLVqHsw1TeCeAjPZ6meV5hU7zgAF/TUVEDqjMKYJx2Z15qR/AC', 'STAFF', 'STAFF', NULL, '2025-10-04 23:57:34', '2025-12-28 11:23:02'),
+(16, 'Bagas', 'bergasana@gmail.com', '000003', '6281331316662', '2025-10-05 00:06:14', '$2y$12$5zFkpQ/mlx0fuuD14sPJReTMLEc/UMdtuKfcISMNuHvNHsiHhU1Yy', 'BO', 'BO', NULL, '2025-10-04 23:57:34', '2025-12-28 11:23:02'),
+(17, 'Sapardi', 'sapardi097@gmail.com', NULL, NULL, '2025-10-05 00:06:14', '$2y$12$m6RAtqArLAiRWvYdFN5paelyZ5RMxQn.QCDFv9WGUkv4Y4P52cani', 'STAFF', 'STAFF', NULL, '2025-10-04 23:57:34', '2025-12-28 11:23:02'),
+(18, 'Bayu', 'pcbayu@gmail.com', '000029', NULL, '2025-10-05 00:06:14', '$2y$12$ERJ7haAPzCwD9HIDlH7edO2TpzgYdNlgwCxvMukV6I91mtFYObxEO', 'FE', 'FE', NULL, '2025-10-04 23:57:34', '2025-12-28 11:23:02'),
+(19, 'Cubz', 'faisalnoor53@gmail.com', NULL, '6281393642462', '2025-10-05 00:06:15', '$2y$12$4HLwMmtzQ.2GsJUSJV6JW.LEzOwWtdiQR3bB8wENLx8oOJfJttoVi', 'TLL', 'TLL', NULL, '2025-10-04 23:57:35', '2025-12-28 11:23:02'),
+(20, 'Fitri', 'mafitri@gmail.com', '000016', '628152302448', '2025-10-05 00:06:15', '$2y$12$Bavsr2NYY6xPhfas8nmbZene8Rs6wUkktkCpBE8COGf34WyUxYu8y', 'KBO', 'KBO', NULL, '2025-10-04 23:57:35', '2025-12-28 11:23:02'),
+(21, 'Danang', 'fitrahdanang86@gmail.com', '000015', '6281548353288', '2025-10-05 00:06:15', '$2y$12$zZ0bfxb68sWn6S9lnJIThOLqTH/Ypq7MJ0Kb1wgyPkwtcE7QyKxjK', 'TEL', 'TEL', NULL, '2025-10-04 23:57:35', '2025-12-28 11:23:02'),
+(22, 'Renny', 'rennyherlina@gmail.com', '000034', '6281567819780', '2025-10-05 00:06:15', '$2y$12$kgAr09593FGinWY5XnGMNeuSsedc6TweOkCATnbchVL/q2WdOjSOm', 'SAD', 'SAD', NULL, '2025-10-04 23:57:36', '2025-12-28 11:23:02'),
+(24, 'Priyo', 'pewe.wicaksono@gmail.com', NULL, '6281578732720', '2025-10-05 00:06:15', '$2y$12$Toix63Ynhcb2PPyCUqvl7eqz253sulKDtD3bwwHw/w.103yH9tilq', 'STAFF', 'STAFF', NULL, '2025-10-04 23:57:36', '2025-12-28 11:23:02'),
+(25, 'Sarjiyanto', 'muhammad.sarjiyanto@gmail.com', NULL, NULL, '2025-10-05 00:06:15', '$2y$12$ad/MFivUvLKPQAl8OFgP7eVQ4m5BXNnpih28wjlsrFcClQ8Y2VyIC', 'STAFF', 'STAFF', NULL, '2025-10-04 23:57:36', '2025-12-28 11:23:02'),
+(26, 'Sugeng', 'sugengriyanto1972@gmail.com', '000046', '628170420234', '2025-10-05 00:06:15', '$2y$12$jpsOjvnINkPDAthWJNahsegCisfOHqeE8EpUsUC5E7NUR9O9cLl9m', 'TLL', 'TLL', NULL, '2025-10-04 23:57:37', '2025-12-28 11:23:02'),
+(27, 'Respati', 'r.cahyo.n02@gmail.com', NULL, NULL, '2025-10-05 00:06:15', '$2y$12$01XG/DzBRUmYLpNGTVvodO8DVuswJ.m8tmXfuFmsXqSbM.hqS2Cdi', 'PE', 'PE', NULL, '2025-10-04 23:57:37', '2025-12-28 11:23:02'),
+(28, 'Suci', 'sucisekarsari.1980@gmail.com', NULL, '6281802711130', '2025-10-05 00:06:15', '$2y$12$1Lcijht2mAmTcPhdPAA6veXHQjuZDejwybYrbaglQwTWTf0eoI1Hu', 'KSA', 'KSA', NULL, '2025-10-04 23:57:37', '2025-12-28 11:23:02'),
+(29, 'Sofyan', 'sofyanafnani@gmail.com', '000043', NULL, '2025-10-05 00:06:15', '$2y$12$O3PmlyqEJgQ9fypIfl1//uJKmzuE0IU438tW6x.uyg7RUFDOvoPNO', 'AO', 'AO', NULL, '2025-10-04 23:57:38', '2025-12-28 11:23:02'),
+(30, 'Wiyandari', 'arfanrafasha@gmail.com', '000054', '6281904223715', '2025-10-05 00:06:15', '$2y$12$4y/R5lG8VIj3RfelM4x2BOH7N5tFYDGXEkny550GWsNRPkBvaL8gO', 'KBF', 'KBF', NULL, '2025-10-04 23:57:38', '2025-12-28 11:23:02'),
+(31, 'Novi', 'novi281181@yahoo.co.id', '000028', '6282131304969', '2025-10-05 00:06:15', '$2y$12$KniD8p3c03ZuTGzhJnSOu.qflMWxqvqD03EB4gq5U.K.b5L5ZmNP6', 'KSF', 'KSF', NULL, '2025-10-04 23:57:38', '2025-12-28 11:23:02'),
+(32, 'Vina', 'dinovitavina21@gmail.com', '000053', NULL, '2025-10-05 00:06:15', '$2y$12$czRzjQJt3GzAzgb5EHrSJe/3pKEw24h09wlrclwPWamAAxByKYVL.', 'FO', 'FO', NULL, '2025-10-04 23:57:39', '2025-12-28 11:23:02'),
+(33, 'Yunus', 'yunushasby.msa@gmail.com', '000058', '6282137521150', '2025-10-05 00:06:15', '$2y$12$dUahbxiBGOmPZNI/VLPvb.PE6sLunuqALr52TJGsYsSmX0ccb9QYO', 'BE', 'BE', NULL, '2025-10-04 23:57:39', '2025-12-28 11:23:02'),
+(34, 'Fari', 'rosa.sylviani26@gmail.com', '000012', '6282140519917', '2025-10-05 00:06:15', '$2y$12$eyPR8DLb8OI5BNK5R1TbEOUIRZyYg.dFUaXFJtsHUZUW3LjsC3Xa6', 'SSD', 'SSD', NULL, '2025-10-04 23:57:39', '2025-12-28 11:23:02'),
+(35, 'Toro', 'ekristiantorobprmsa@gmail.com', '000008', '6282221273470', '2025-10-05 00:06:15', '$2y$12$KniD8p3c03ZuTGzhJnSOu.qflMWxqvqD03EB4gq5U.K.b5L5ZmNP6', 'KBL', 'KBL', NULL, '2025-10-04 23:57:39', '2025-12-28 11:23:02'),
+(36, 'Rosalina', 'ardiantirosalina@gmail.com', '000038', '6282226822278', '2025-10-05 00:06:15', '$2y$12$.45VkK7EySdxLtqRhxKSVOlMSWNPwExy5ITAravbw1tsqjIUWPFja', 'TLR', 'TLR', NULL, '2025-10-04 23:57:40', '2025-12-28 11:23:02'),
+(37, 'Helmi', 'rinomohelmi@gmail.com', '000018', '6282299780168', '2025-10-05 00:06:16', '$2y$12$tM3Mj.dO82NTb5/7d3boiutHDgrO1Jsby4JnKgfKeZbDoSlGqfR7i', 'TLR', 'TLR', NULL, '2025-10-04 23:57:40', '2025-12-28 11:23:02'),
+(38, 'Retno', 'rahayu.retno023@gmail.com', '000036', '6285228337347', '2025-10-05 00:06:16', '$2y$12$zoKSmNL89EvcsIc1M5WBVey2YQ/4G37DecLCVe5uBrmTp0rLVB7We', 'KSR', 'KSR', NULL, '2025-10-04 23:57:40', '2025-12-28 11:23:02'),
+(39, 'Lilik', 'liliksetiadarmawan@gmail.com', '000025', NULL, '2025-10-05 00:06:16', '$2y$12$M.YJOrYp0bygEVcPQGlRwuM1G48/jPB2nMlZqLUVu.7UoBml7SZEu', 'PE', 'PE', NULL, '2025-10-04 23:57:40', '2025-12-28 11:23:02'),
+(40, 'Ahmad', 'ayokfbs@gmail.com', NULL, NULL, '2025-10-05 00:06:16', '$2y$12$5/CFbLpbcOqfQRERjb57zO9UcZvuZCenB.sAbGK04wvs1jEOXaLEm', 'STAFF', 'STAFF', NULL, '2025-10-04 23:57:41', '2025-12-28 11:23:02'),
+(41, 'Dora', 'enadhor@gmail.com', '000009', '6285326621666', '2025-10-05 00:06:16', '$2y$12$ZgI8K/ywXCAoI9wwo2iqr.ybD1.tAax4HcpP4ONkG06EDH9INj88S', 'TLF', 'TLF', NULL, '2025-10-04 23:57:41', '2025-12-28 11:23:02'),
+(42, 'Aryo', 'wisnuaryopamungkas065@gmail.com', '000072', NULL, '2025-10-05 00:06:16', '$2y$12$NQIOn1ZxOKZVhT3wmlxM7.imKnENP4FJcb.Mvz1HyAUB6XjUWB74.', 'FE', 'FE', NULL, '2025-10-04 23:57:41', '2025-12-28 11:23:02'),
+(43, 'Kholil', 'lilkho636@gmail.com', '000022', NULL, '2025-10-05 00:06:16', '$2y$12$16Cy9MxyjMXcUBV42J/6UumhThQyV4KSMY/ZRTkRwuK1AqK3ndaI6', 'AO', 'AO', NULL, '2025-10-04 23:57:42', '2025-12-28 11:23:02'),
+(44, 'Vera', 'hartanti.vera13@gmail.com', '000052', '6285641999954', '2025-10-05 00:06:16', '$2y$12$ij0M8lAXWEBBOTdJHcvaYuTbOnZlGVftVdKS5K1DhZuWSakR.HRf2', 'PE', 'PE', NULL, '2025-10-04 23:57:42', '2025-12-28 11:23:02'),
+(45, 'Arif', 'arifyudisasonosuryo@gmail.com', NULL, NULL, '2025-10-05 00:06:16', '$2y$12$s72btTfJTH0zdRGxKzzF9uZWOuLaHfSAiopN8vmblhb6x2C3XxMOu', 'STAFF', 'STAFF', NULL, '2025-10-04 23:57:42', '2025-12-28 11:23:02'),
+(46, 'Phillipus', 'phillipus.andhy@gmail.com', '000030', '6285729437168', '2025-10-05 00:06:16', '$2y$12$G2m0UrUX3zFsA.AGePz2/OmiHW917NlTglOshfp0/nEY2IFmLBpWC', 'TLL', 'TLL', NULL, '2025-10-04 23:57:42', '2025-12-28 11:23:02'),
+(47, 'Septi', 'septi.ika29@gmail.com', '000042', '6285729958688', '2025-10-05 00:06:16', '$2y$12$1fuh2ejVRjHXtmzN9gatZebhUYBijqv6lPKGSkKLynSyTdNzHsRRq', 'KSO', 'KSO', NULL, '2025-10-04 23:57:43', '2025-12-28 11:23:02'),
+(48, 'Harri', 'harriprasetyo0000@gmail.com', '000017', '6285741828565', '2025-10-05 00:06:16', '$2y$12$DC3JNYFtUcGcMrsPpF0mC.o6QVzpl1Z/CQ/lshN8AUNZqg2WgFlui', 'AO', 'AO', NULL, '2025-10-04 23:57:43', '2025-12-28 11:23:02'),
+(49, 'Parwanto', 'mparwanto.1972@gmail.com', NULL, NULL, '2025-10-05 00:06:16', '$2y$12$.Cpjg4A9hPbxUqAAN2COc.X7dg6ITlH/aSAlklIzouwuY75hMNUSW', 'SSD', 'SSD', NULL, '2025-10-04 23:57:43', '2025-12-28 11:23:02'),
+(50, 'Yuli', 'yuliindra701@gmail.com', NULL, NULL, '2025-10-05 00:06:16', '$2y$12$wtmyP1Qhr8fefXtBAwzqMe/udz6F/evIluzpjt50FnGWC0wdRmb2O', 'STAFF', 'STAFF', NULL, '2025-10-04 23:57:43', '2025-12-28 11:23:02'),
+(51, 'Yanuar', 'yanuarpm.bprmsa@gmail.com', '000068', NULL, '2025-10-05 00:06:16', '$2y$12$esUgH74jvcMH4qZ4WyvhAe/iQEjxtp.DMKHJ94OnCWxyKQY/Ay9G6', 'KOM', 'KOM', NULL, '2025-10-04 23:57:44', '2025-12-28 11:23:02'),
+(52, 'Janudin', 'udinesia59@gmail.com', NULL, NULL, '2025-10-05 00:06:16', '$2y$12$G5MBAvdIoMvRq2Gyf1/LzemlIzWbALMP8tJlAAFr9zBX064OYYqXC', 'STAFF', 'STAFF', NULL, '2025-10-04 23:57:44', '2025-12-28 11:23:02'),
+(53, 'Thalia', 'tiakharistia23@gmail.com', '000079', '6287738210613', '2025-10-05 00:06:16', '$2y$12$mUboeq3Md8INmMugD5yosuaDGxYAaXIYnDm1XmxQmLNz4f3A/W3Iu', 'STAFF', 'STAFF', NULL, '2025-10-04 23:57:44', '2025-12-28 11:23:02'),
+(54, 'Muhammad', 'asrorsaiful080@gmail.com', NULL, NULL, '2025-10-05 00:06:16', '$2y$12$Lp7/Xa6HMWodkyI7AIRIr.Qp4JwjV.e9vm08pMlrx4RCsFl6Ap4Za', 'STAFF', 'STAFF', NULL, '2025-10-04 23:57:45', '2025-12-28 11:23:02'),
+(55, 'Bambang', 'handokoasther1922@gmail.com', NULL, NULL, '2025-10-05 00:06:16', '$2y$12$qMyxSFnrnhVeWFbh9yPFs.QNE71DD5PvYbZLPN1q0MAbPcLxpA5eK', 'STAFF', 'STAFF', NULL, '2025-10-04 23:57:45', '2025-12-28 11:23:02'),
+(56, 'Wenang', 'wenangadhi8@gmail.com', '000071', '6287839273006', '2025-10-05 00:06:16', '$2y$12$oq2CcOZu/T.pd8FxSVXHEuAtERNbdPQ3QFOS5XP6f0jk2yJ8r7GmW', 'AO', 'AO', NULL, '2025-10-04 23:57:45', '2025-12-28 11:23:02'),
+(57, 'Kung Tri', 'trimantono57@gmail.com', '000049', '6287839473234', '2025-10-05 00:06:16', '$2y$12$4lECMpQzdHC4.n7s4sdtMeHYnAUuREPgrVyzygbLoS1xahry1V6vG', 'STAFF', 'STAFF', NULL, '2025-10-04 23:57:46', '2025-12-28 11:23:02'),
+(58, 'Susetyo', 'chtiosty@gmail.com', '000047', '6288980000133', '2025-10-05 00:06:16', '$2y$12$onMfUxBVEh3AD47fRP8PTeSQQEKHoY6G2ZWQGN8hIgLGU6RyyDdQS', 'KSL', 'KSL', NULL, '2025-10-04 23:57:46', '2025-12-28 11:23:02'),
+(59, 'Ruly', 'ruly.arif09061976@gmail.com', '000040', '6288980000134', '2025-10-05 00:06:16', '$2y$12$Y7u5ETWfZ3KxHauo8PP0heyXsD1kIA6De9MhE.S9FbWE1MLPLA01e', 'SAD', 'SAD', NULL, '2025-10-04 23:57:46', '2025-12-28 11:23:02'),
+(60, 'Yulian', 'jogjaseturan@gmail.com', '000057', NULL, '2025-10-05 00:06:16', '$2y$12$QjFg9nLTQMp0GlavszEw3./CyPpURg7.vV8ggDpELmBb39DMnR0je', 'STAFF', 'STAFF', NULL, '2025-10-04 23:57:46', '2025-12-28 11:23:02'),
+(61, 'Krisno', 'krisnobejosantoso82@gmail.com', NULL, NULL, '2025-10-05 00:06:16', '$2y$12$ssCY/hnKEhxVlVAe8WnDwO2KN3JaHjl10pFX74YA11sW2r4TlGfJS', 'STAFF', 'STAFF', NULL, '2025-10-04 23:57:47', '2025-12-28 11:23:02'),
+(62, 'Heru', 'themarkete@gmail.com', '000019', NULL, '2025-10-05 00:06:16', '$2y$12$9b1JJ2E1SACb3FqvOru1pOTXeSfBEVYjRe1byYAbLODyTcz/bpFoq', 'AO', 'AO', NULL, '2025-10-04 23:57:47', '2025-12-28 11:23:02'),
+(63, 'Winda', 'refowinda19@gmail.com', '000033', '628994456339', '2025-10-05 00:06:16', '$2y$12$uDbDZo/XmPxpXAge3S9OGux5lnlaUfX9QTHHVcWjavrTXoiFXD1iS', 'SAD', 'SAD', NULL, '2025-10-04 23:57:47', '2025-12-28 11:23:02'),
+(64, 'Wisnu', 'wisnu.sumarsono@gmail.com', '000020', '6285870356680', '2025-10-05 00:06:16', '$2y$12$X1wcDYy8E5q7U5fRERX8eu5mmMOZmIzqVRgm5OUC72K6ArpEOywyC', 'TLR', 'TLR', NULL, '2025-10-04 23:57:48', '2025-12-28 11:23:02'),
+(66, 'Baried', 'baried.satoe@gmail.com', '000086', NULL, '2025-10-05 00:06:16', '$2y$12$x3CZUwzEC5Eu/S.KHBEw9egaloEf1DWy6OE5ThYC6bnH5UY4z7EfO', 'FE', 'FE', NULL, '2025-10-04 23:57:48', '2025-12-28 11:23:02'),
+(68, 'Jenny', 'jennyanggree@gmail.com', '000081', NULL, '2025-10-05 00:06:16', '$2y$12$DC3JNYFtUcGcMrsPpF0mC.o6QVzpl1Z/CQ/lshN8AUNZqg2WgFlui', 'SPE', 'SPE', NULL, '2025-10-04 23:57:49', '2025-12-28 11:23:02'),
+(69, 'Ratna', 'ratnawatidewi507@gmail.com', '000082', NULL, '2025-10-05 00:06:16', '$2y$12$mUboeq3Md8INmMugD5yosuaDGxYAaXIYnDm1XmxQmLNz4f3A/W3Iu', 'CS', 'CS', NULL, '2025-10-04 23:57:49', '2025-12-28 11:23:02'),
+(70, 'Muthia', 'muthiarizafauziah@gmail.com', '000080', '6282138001027', '2025-10-05 00:06:16', '$2y$12$B3MPZfFNtGVcHiJKmA9oeedtiBTr0t16rmE4cUtQVzFO0kuwlZrhO', 'SPE', 'SPE', NULL, '2025-10-04 23:57:49', '2025-12-28 11:23:02'),
+(71, 'Hesti', 'tyasningrum94@gmail.com', '000090', NULL, '2025-10-05 00:06:16', '$2y$12$UT5dcEg//OUZiv8njuPywuNE.doHTNq16iGkT/bCAhvOYPrkcC8re', 'FO', 'FO', NULL, '2025-10-04 23:57:50', '2025-12-28 11:23:02'),
+(72, 'Wawan', 'triwawanta@gmail.com', '000050', NULL, '2025-10-05 00:06:16', '$2y$12$biv/DZ2g7xwApjC4Ht3OW.iwuA5t.4xNNCMLSP77D5ZXGcn68ARPO', 'AO', 'AO', NULL, '2025-10-04 23:57:50', '2025-12-28 11:23:02'),
+(73, 'MAYONG PRATOMO', 'carieryogyakarta@gmail.com', '000085', NULL, '2025-10-05 00:06:16', '$2y$12$jDsp.w3kSQNhBW6PdfIdGeCdvGWUvCMmMRiohLhhwTYiZIVsB3Adm', 'AO', 'AO', NULL, '2025-10-04 23:57:50', '2025-12-28 11:23:02'),
+(74, 'Sabani', 'ahmadnursabani25@gmail.com', '000092', NULL, '2025-10-05 00:06:16', '$2y$12$Xml8LU9cvmtV5.8BH8pO5uKf75TxNsMo1goGKVukQv9alKdpBZHP6', 'FE', 'FE', NULL, '2025-10-04 23:57:50', '2025-12-28 11:23:02'),
+(75, 'citra tunjung sari', 'citratunjungs@gmail.com', '000093', NULL, '2025-10-05 00:06:16', '$2y$12$wqALPzGw0B67IfitzD3S.OZAaDZp1UnfpceZ98dLDDTkxC3rKY3B6', 'FO', 'FO', NULL, '2025-10-04 23:57:51', '2025-12-28 11:23:02'),
+(80, 'anggita', 'Gitaprima0103@gmail.com', '000094', '6281568401122', '2025-10-05 00:06:16', '$2y$12$PPO.07lhM.aHTsCcGeVmweUx3MKyjdR.qWxf/s8bwlPzFEMdhz1Ye', 'CS', 'CS', NULL, '2025-10-04 23:57:51', '2025-12-28 11:23:02'),
+(81, 'Yulia', 'Yuliahestu@gmail.com', NULL, NULL, NULL, '$2y$12$E1PunGsgW2cURKNmF19/6.YvzWnrse.NV1kXG0I/UkIRGKDEM18gS', 'KSR', 'KSR', NULL, NULL, '2025-12-28 11:23:02');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `verifikasis`
+--
+
+CREATE TABLE `verifikasis` (
+  `id_verifikasi` bigint UNSIGNED NOT NULL,
+  `id_tindak_lanjut` bigint UNSIGNED NOT NULL,
+  `id_auditor` bigint UNSIGNED NOT NULL,
+  `status_verifikasi` enum('Diterima','Ditolak') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `catatan` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `tanggal_verifikasi` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `jadwal_audits`
+--
+ALTER TABLE `jadwal_audits`
+  ADD PRIMARY KEY (`id_jadwal`),
+  ADD KEY `jadwal_audits_id_permintaan_foreign` (`id_permintaan`);
+
+--
+-- Indexes for table `migrations`
+--
+ALTER TABLE `migrations`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `permintaan_datas`
+--
+ALTER TABLE `permintaan_datas`
+  ADD PRIMARY KEY (`id_permintaan`),
+  ADD KEY `permintaan_datas_id_surat_foreign` (`id_surat`),
+  ADD KEY `permintaan_datas_id_auditor_foreign` (`id_auditor`),
+  ADD KEY `permintaan_datas_id_auditee_foreign` (`id_auditee`);
+
+--
+-- Indexes for table `personal_access_tokens`
+--
+ALTER TABLE `personal_access_tokens`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
+  ADD KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`),
+  ADD KEY `personal_access_tokens_expires_at_index` (`expires_at`);
+
+--
+-- Indexes for table `respon_temuans`
+--
+ALTER TABLE `respon_temuans`
+  ADD PRIMARY KEY (`id_respon`),
+  ADD KEY `respon_temuans_id_temuan_foreign` (`id_temuan`),
+  ADD KEY `respon_temuans_id_auditee_foreign` (`id_auditee`);
+
+--
+-- Indexes for table `surat_tugas_pemeriksaans`
+--
+ALTER TABLE `surat_tugas_pemeriksaans`
+  ADD PRIMARY KEY (`id_surat`),
+  ADD KEY `surat_tugas_pemeriksaans_id_auditor_foreign` (`id_auditor`);
+
+--
+-- Indexes for table `temuans`
+--
+ALTER TABLE `temuans`
+  ADD PRIMARY KEY (`id_temuan`),
+  ADD KEY `temuans_id_permintaan_foreign` (`id_permintaan`),
+  ADD KEY `temuans_id_auditor_foreign` (`id_auditor`),
+  ADD KEY `temuans_id_auditee_foreign` (`id_auditee`);
+
+--
+-- Indexes for table `tindak_lanjuts`
+--
+ALTER TABLE `tindak_lanjuts`
+  ADD PRIMARY KEY (`id_tindak_lanjut`),
+  ADD KEY `tindak_lanjuts_id_respon_foreign` (`id_respon`),
+  ADD KEY `tindak_lanjuts_id_auditee_foreign` (`id_auditee`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `verifikasis`
+--
+ALTER TABLE `verifikasis`
+  ADD PRIMARY KEY (`id_verifikasi`),
+  ADD KEY `verifikasis_id_tindak_lanjut_foreign` (`id_tindak_lanjut`),
+  ADD KEY `verifikasis_id_auditor_foreign` (`id_auditor`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `jadwal_audits`
+--
+ALTER TABLE `jadwal_audits`
+  MODIFY `id_jadwal` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+
+--
+-- AUTO_INCREMENT for table `migrations`
+--
+ALTER TABLE `migrations`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+
+--
+-- AUTO_INCREMENT for table `permintaan_datas`
+--
+ALTER TABLE `permintaan_datas`
+  MODIFY `id_permintaan` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+
+--
+-- AUTO_INCREMENT for table `personal_access_tokens`
+--
+ALTER TABLE `personal_access_tokens`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=207;
+
+--
+-- AUTO_INCREMENT for table `respon_temuans`
+--
+ALTER TABLE `respon_temuans`
+  MODIFY `id_respon` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+
+--
+-- AUTO_INCREMENT for table `surat_tugas_pemeriksaans`
+--
+ALTER TABLE `surat_tugas_pemeriksaans`
+  MODIFY `id_surat` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
+--
+-- AUTO_INCREMENT for table `temuans`
+--
+ALTER TABLE `temuans`
+  MODIFY `id_temuan` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+
+--
+-- AUTO_INCREMENT for table `tindak_lanjuts`
+--
+ALTER TABLE `tindak_lanjuts`
+  MODIFY `id_tindak_lanjut` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
+
+--
+-- AUTO_INCREMENT for table `verifikasis`
+--
+ALTER TABLE `verifikasis`
+  MODIFY `id_verifikasi` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `jadwal_audits`
+--
+ALTER TABLE `jadwal_audits`
+  ADD CONSTRAINT `jadwal_audits_id_permintaan_foreign` FOREIGN KEY (`id_permintaan`) REFERENCES `permintaan_datas` (`id_permintaan`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Constraints for table `permintaan_datas`
+--
+ALTER TABLE `permintaan_datas`
+  ADD CONSTRAINT `permintaan_datas_id_auditee_foreign` FOREIGN KEY (`id_auditee`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `permintaan_datas_id_auditor_foreign` FOREIGN KEY (`id_auditor`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `permintaan_datas_id_surat_foreign` FOREIGN KEY (`id_surat`) REFERENCES `surat_tugas_pemeriksaans` (`id_surat`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Constraints for table `respon_temuans`
+--
+ALTER TABLE `respon_temuans`
+  ADD CONSTRAINT `respon_temuans_id_auditee_foreign` FOREIGN KEY (`id_auditee`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `respon_temuans_id_temuan_foreign` FOREIGN KEY (`id_temuan`) REFERENCES `temuans` (`id_temuan`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Constraints for table `surat_tugas_pemeriksaans`
+--
+ALTER TABLE `surat_tugas_pemeriksaans`
+  ADD CONSTRAINT `surat_tugas_pemeriksaans_id_auditor_foreign` FOREIGN KEY (`id_auditor`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Constraints for table `temuans`
+--
+ALTER TABLE `temuans`
+  ADD CONSTRAINT `temuans_id_auditee_foreign` FOREIGN KEY (`id_auditee`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `temuans_id_auditor_foreign` FOREIGN KEY (`id_auditor`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `temuans_id_permintaan_foreign` FOREIGN KEY (`id_permintaan`) REFERENCES `permintaan_datas` (`id_permintaan`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Constraints for table `tindak_lanjuts`
+--
+ALTER TABLE `tindak_lanjuts`
+  ADD CONSTRAINT `tindak_lanjuts_id_auditee_foreign` FOREIGN KEY (`id_auditee`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `tindak_lanjuts_id_respon_foreign` FOREIGN KEY (`id_respon`) REFERENCES `respon_temuans` (`id_respon`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Constraints for table `verifikasis`
+--
+ALTER TABLE `verifikasis`
+  ADD CONSTRAINT `verifikasis_id_auditor_foreign` FOREIGN KEY (`id_auditor`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `verifikasis_id_tindak_lanjut_foreign` FOREIGN KEY (`id_tindak_lanjut`) REFERENCES `tindak_lanjuts` (`id_tindak_lanjut`) ON DELETE RESTRICT ON UPDATE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
